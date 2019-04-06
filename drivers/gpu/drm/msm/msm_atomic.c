@@ -73,6 +73,7 @@ int msm_drm_unregister_client(struct notifier_block *nb)
 }
 EXPORT_SYMBOL(msm_drm_unregister_client);
 
+static bool notifier_enabled __read_mostly = true;
 /**
  * msm_drm_notifier_call_chain - notify clients of drm_events
  * @val: event MSM_DRM_EARLY_EVENT_BLANK or MSM_DRM_EVENT_BLANK
@@ -85,10 +86,20 @@ int msm_drm_notifier_call_chain(unsigned long val, void *v)
 static int msm_drm_notifier_call_chain(unsigned long val, void *v)
 #endif
 {
+	if (unlikely(!notifier_enabled))
+		return 0;
+
 	return blocking_notifier_call_chain(&msm_drm_notifier_list, val,
 					    v);
 }
 EXPORT_SYMBOL(msm_drm_notifier_call_chain);
+
+void msm_drm_notifier_enable(bool val)
+{
+	notifier_enabled = val;
+	mb();
+}
+EXPORT_SYMBOL(msm_drm_notifier_enable);
 
 /* block until specified crtcs are no longer pending update, and
  * atomically mark them as pending update
