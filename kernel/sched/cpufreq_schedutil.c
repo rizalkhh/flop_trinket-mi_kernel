@@ -1082,7 +1082,7 @@ static int sugov_init(struct cpufreq_policy *policy)
 		break;
 	}
 
-	tunables->iowait_boost_enable = false;
+	tunables->iowait_boost_enable = true;
 
 	policy->governor_data = sg_policy;
 	sg_policy->tunables = tunables;
