@@ -14,6 +14,8 @@
 
 
 #define pr_fmt(fmt)	"dsi-drm:[%s] " fmt, __func__
+#include <linux/msm_drm_notify.h>
+
 #include <drm/drm_atomic_helper.h>
 #include <drm/drm_atomic.h>
 #ifdef CONFIG_MACH_XIAOMI_C3J
@@ -229,6 +231,10 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 {
 	int rc = 0;
 	struct dsi_bridge *c_bridge = to_dsi_bridge(bridge);
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	struct msm_drm_notifier notify_data;
+	int power_mode;
+#endif
 #ifdef CONFIG_MACH_XIAOMI_C3J
 	struct drm_device *dev = bridge->dev;
 	int event = 0;
@@ -257,6 +263,12 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 
 	atomic_set(&c_bridge->display->panel->esd_recovery_pending, 0);
 
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	power_mode = sde_connector_get_lp(c_bridge->display->drm_conn);
+	notify_data.data = &power_mode;
+	notify_data.id = MSM_DRM_PRIMARY_DISPLAY;
+	msm_drm_notifier_call_chain(MSM_DRM_EARLY_EVENT_BLANK, &notify_data);
+#endif
 #ifdef CONFIG_MACH_XIAOMI_C3J
 	if (c_bridge->display->is_prim_display && atomic_read(&prim_panel_is_on)) {
 		cancel_delayed_work_sync(&prim_panel_work);
@@ -302,6 +314,9 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 				c_bridge->id, rc);
 		(void)dsi_display_unprepare(c_bridge->display);
 	}
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	msm_drm_notifier_call_chain(MSM_DRM_EVENT_BLANK, &notify_data);
+#endif
 #ifdef CONFIG_MACH_XIAOMI_C3J
 	if ((strnstr(saved_command_line, "tianma", strlen(saved_command_line)) != NULL) ||
 	    (strnstr(saved_command_line, "shenchao", strlen(saved_command_line)) != NULL))
@@ -433,6 +448,10 @@ static void dsi_bridge_post_disable(struct drm_bridge *bridge)
 {
 	int rc = 0;
 	struct dsi_bridge *c_bridge = to_dsi_bridge(bridge);
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	struct msm_drm_notifier notify_data;
+	int power_mode;
+#endif
 #ifdef CONFIG_MACH_XIAOMI_C3J
 	struct drm_device *dev = bridge->dev;
 	int event = 0;
@@ -453,6 +472,12 @@ static void dsi_bridge_post_disable(struct drm_bridge *bridge)
 		return;
 	}
 
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	power_mode = sde_connector_get_lp(c_bridge->display->drm_conn);
+	notify_data.data = &power_mode;
+	notify_data.id = MSM_DRM_PRIMARY_DISPLAY;
+	msm_drm_notifier_call_chain(MSM_DRM_EARLY_EVENT_BLANK, &notify_data);
+#endif
 #ifdef CONFIG_MACH_XIAOMI_C3J
 	if ((strnstr(saved_command_line, "tianma", strlen(saved_command_line)) != NULL) ||
 	    (strnstr(saved_command_line, "shenchao", strlen(saved_command_line)) != NULL))
@@ -479,6 +504,9 @@ static void dsi_bridge_post_disable(struct drm_bridge *bridge)
 	}
 	SDE_ATRACE_END("dsi_bridge_post_disable");
 
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	msm_drm_notifier_call_chain(MSM_DRM_EVENT_BLANK, &notify_data);
+#endif
 #ifdef CONFIG_MACH_XIAOMI_C3J
 	if ((strnstr(saved_command_line, "tianma", strlen(saved_command_line)) != NULL) ||
 	    (strnstr(saved_command_line, "shenchao", strlen(saved_command_line)) != NULL))
