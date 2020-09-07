@@ -17,6 +17,7 @@
 #include <linux/slab.h>
 #include <trace/events/power.h>
 #include <linux/sched/sysctl.h>
+#include <linux/battery_saver.h>
 #include "sched.h"
 
 #define SUGOV_KTHREAD_PRIORITY	50
@@ -251,7 +252,7 @@ static void sugov_set_iowait_boost(struct sugov_cpu *sg_cpu, u64 time,
 {
 	struct sugov_policy *sg_policy = sg_cpu->sg_policy;
 
-	if (!sg_policy->tunables->iowait_boost_enable)
+	if (!sg_policy->tunables->iowait_boost_enable || is_battery_saver_on())
 		return;
 
 	if (flags & SCHED_CPUFREQ_IOWAIT) {
@@ -555,8 +556,8 @@ static ssize_t iowait_boost_enable_show(struct gov_attr_set *attr_set,
                                         char *buf)
 {
 	struct sugov_tunables *tunables = to_sugov_tunables(attr_set);
-	return snprintf(buf, PAGE_SIZE, "%u\n",
-		tunables->iowait_boost_enable);
+	return snprintf(buf, PAGE_SIZE, "%u\n", is_battery_saver_on() ?
+		0 : tunables->iowait_boost_enable);
 }
 
 static ssize_t iowait_boost_enable_store(struct gov_attr_set *attr_set,
