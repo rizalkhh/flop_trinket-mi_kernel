@@ -21,6 +21,10 @@
 #include <drm/drm_sysfs.h>
 #include <drm/drmP.h>
 #include "drm_internal.h"
+#ifdef CONFIG_MACH_XIAOMI_F9S
+#include "./msm/sde/sde_connector.h"
+#include "./msm/dsi-staging/dsi_display.h"
+#endif
 
 #define to_drm_minor(d) dev_get_drvdata(d)
 #define to_drm_connector(d) dev_get_drvdata(d)
@@ -229,16 +233,61 @@ static ssize_t modes_show(struct device *device,
 	return written;
 }
 
+#ifdef CONFIG_MACH_XIAOMI_F9S
+unsigned long disp_param_value = 0;
+static ssize_t disp_param_show(struct device *device,
+			       struct device_attribute *attr,
+			       char *buf)
+{
+	ssize_t count = 0;
+
+	count = snprintf(buf + count, PAGE_SIZE, "disp_param_value : 0x%lx\n",
+			 disp_param_value);
+	return count;
+}
+
+static ssize_t disp_param_store(struct device *device,
+				struct device_attribute *attr,
+				const char *buf, size_t count)
+{
+	struct drm_connector *connector = to_drm_connector(device);
+	struct sde_connector *c_conn;
+	struct dsi_display *display;
+	uint32_t param;
+
+	c_conn = container_of(connector, struct sde_connector, base);
+	if (!c_conn || !c_conn->display) {
+		DRM_ERROR("NULL pionter");
+		return 0;
+	}
+
+	display = (struct dsi_display *) c_conn->display;
+
+	sscanf(buf, "0x%x", &param);
+	DRM_INFO("%s: buf = %s, param = 0x%x\n", __func__, buf, param);
+
+	dsi_display_param_store(display, param);
+
+	return count;
+}
+#endif
+
 static DEVICE_ATTR_RW(status);
 static DEVICE_ATTR_RO(enabled);
 static DEVICE_ATTR_RO(dpms);
 static DEVICE_ATTR_RO(modes);
+#ifdef CONFIG_MACH_XIAOMI_F9S
+static DEVICE_ATTR_RW(disp_param);
+#endif
 
 static struct attribute *connector_dev_attrs[] = {
 	&dev_attr_status.attr,
 	&dev_attr_enabled.attr,
 	&dev_attr_dpms.attr,
 	&dev_attr_modes.attr,
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	&dev_attr_disp_param.attr,
+#endif
 	NULL
 };
 
