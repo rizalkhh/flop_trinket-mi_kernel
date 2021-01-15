@@ -1,4 +1,5 @@
 /* Copyright (c) 2018-2020 The Linux Foundation. All rights reserved.
+ * Copyright (C) 2020 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -208,6 +209,10 @@ static struct smb_params smb5_pm8150b_params = {
 	},
 };
 
+#ifdef CONFIG_MACH_XIAOMI_F9S
+struct smb_charger *wt_smbchip = NULL;
+#endif
+
 struct smb_dt_props {
 	int			usb_icl_ua;
 	struct device_node	*revid_dev_node;
@@ -236,6 +241,10 @@ struct smb5 {
 	struct smb_dt_props	dt;
 };
 
+#ifdef CONFIG_MACH_XIAOMI_F9S
+extern void smb5_set_calling_current(struct smb_charger *chg);
+#endif
+
 static int __debug_mask;
 module_param_named(
 	debug_mask, __debug_mask, int, 0600
@@ -263,7 +272,11 @@ static const struct clamp_config clamp_levels[] = {
 	{ {0x11C6, 0x11F9, 0x13F1}, {0x60, 0x2B, 0x9C} },
 };
 
+#ifdef CONFIG_MACH_XIAOMI_F9S
+#define PMI632_MAX_ICL_UA	2000000
+#else
 #define PMI632_MAX_ICL_UA	3000000
+#endif
 #define PM6150_MAX_FCC_UA	3000000
 static int smb5_chg_config_init(struct smb5 *chip)
 {
@@ -908,7 +921,14 @@ static int smb5_usb_get_prop(struct power_supply *psy,
 		rc = smblib_get_prop_input_current_max(chg, val);
 		break;
 	case POWER_SUPPLY_PROP_TYPE:
+#ifdef CONFIG_MACH_XIAOMI_F9S
+		if (chg->usb_type_show)
+			val->intval = chg->real_charger_type;
+		else
+			val->intval = POWER_SUPPLY_TYPE_USB_PD;
+#else
 		val->intval = POWER_SUPPLY_TYPE_USB_PD;
+#endif
 		break;
 	case POWER_SUPPLY_PROP_REAL_TYPE:
 		val->intval = chg->real_charger_type;
@@ -1705,6 +1725,9 @@ static enum power_supply_property smb5_batt_props[] = {
 	POWER_SUPPLY_PROP_TIME_TO_FULL_NOW,
 	POWER_SUPPLY_PROP_FCC_STEPPER_ENABLE,
 	POWER_SUPPLY_PROP_CHARGING_ENABLED,
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	POWER_SUPPLY_PROP_CHARGING_CALL_STATE,
+#endif
 };
 
 #define DEBUG_ACCESSORY_TEMP_DECIDEGC	250
@@ -1798,7 +1821,11 @@ static int smb5_batt_get_prop(struct power_supply *psy,
 						POWER_SUPPLY_PROP_TEMP, val);
 		break;
 	case POWER_SUPPLY_PROP_TECHNOLOGY:
+#ifdef CONFIG_MACH_XIAOMI_F9S
+		val->intval = POWER_SUPPLY_TECHNOLOGY_LIPO;
+#else
 		val->intval = POWER_SUPPLY_TECHNOLOGY_LION;
+#endif
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_DONE:
 		rc = smblib_get_prop_batt_charge_done(chg, val);
@@ -1838,15 +1865,23 @@ static int smb5_batt_get_prop(struct power_supply *psy,
 		val->intval = 0;
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_FULL:
+#ifdef CONFIG_MACH_XIAOMI_F9S
+		val->intval = 4030000;
+#else
 		rc = smblib_get_prop_from_bms(chg,
 				POWER_SUPPLY_PROP_CHARGE_FULL, val);
+#endif
 		break;
 	case POWER_SUPPLY_PROP_FORCE_RECHARGE:
 		val->intval = 0;
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
+#ifdef CONFIG_MACH_XIAOMI_F9S
+		val->intval = 4030;
+#else
 		rc = smblib_get_prop_from_bms(chg,
 				POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN, val);
+#endif
 		break;
 	case POWER_SUPPLY_PROP_TIME_TO_FULL_NOW:
 		rc = smblib_get_prop_from_bms(chg,
@@ -1855,6 +1890,11 @@ static int smb5_batt_get_prop(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_FCC_STEPPER_ENABLE:
 		val->intval = chg->fcc_stepper_enable;
 		break;
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	case POWER_SUPPLY_PROP_CHARGING_CALL_STATE:
+		val->intval = chg->call_state;
+		break;
+#endif
 	default:
 		pr_err("batt power supply prop %d not supported\n", psp);
 		return -EINVAL;
@@ -1955,10 +1995,19 @@ static int smb5_batt_set_prop(struct power_supply *psy,
 			msleep(50);
 			vote(chg->chg_disable_votable, FORCE_RECHARGE_VOTER,
 					false, 0);
+#ifdef CONFIG_MACH_XIAOMI_F9S
+			chg->chg_done = 0;
+#endif
 		break;
 	case POWER_SUPPLY_PROP_FCC_STEPPER_ENABLE:
 		chg->fcc_stepper_enable = val->intval;
 		break;
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	case POWER_SUPPLY_PROP_CHARGING_CALL_STATE:
+		chg->call_state = val->intval;
+		smb5_set_calling_current(chg);
+		break;
+#endif
 	default:
 		rc = -EINVAL;
 	}
@@ -1981,6 +2030,9 @@ static int smb5_batt_prop_is_writeable(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_INPUT_CURRENT_LIMITED:
 	case POWER_SUPPLY_PROP_STEP_CHARGING_ENABLED:
 	case POWER_SUPPLY_PROP_DIE_HEALTH:
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	case POWER_SUPPLY_PROP_CHARGING_CALL_STATE:
+#endif
 		return 1;
 	default:
 		break;
@@ -2406,6 +2458,18 @@ static int smb5_configure_typec(struct smb_charger *chg)
 		}
 	}
 
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	rc = smblib_masked_write(chg, TYPE_C_DEBUG_ACCESS_SINK_REG,
+				 TYPEC_DEBUG_ACCESS_MODE_MASK,
+				 0x17);
+	if (rc < 0) {
+		dev_err(chg->dev,
+			"Couldn't configure 0x154A rc=%d\n",
+				rc);
+		return rc;
+	}
+#endif
+
 	if (chg->chg_param.smb_version != PMI632_SUBTYPE) {
 		/*
 		 * Enable detection of unoriented debug
@@ -2677,6 +2741,18 @@ static int smb5_init_hw(struct smb5 *chip)
 		smblib_get_charge_param(chg, &chg->param.fv,
 				&chg->batt_profile_fv_uv);
 
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	rc = smblib_masked_write(chg, USBIN_5V_AICL_THRESHOLD_REG, 0xFF, 0);
+	if (rc < 0) {
+		dev_err(chg->dev, "WT setting AICL 4P0 error rc=%d\n", rc);
+	}
+
+	rc = smblib_masked_write(chg, USBIN_9V_AICL_THRESHOLD_REG, 0xFF, 0x04);
+	if (rc < 0) {
+		dev_err(chg->dev, "WT setting 9V AICL 8P0 error rc=%d\n", rc);
+	}
+#endif
+
 	smblib_get_charge_param(chg, &chg->param.usb_icl,
 				&chg->default_icl_ua);
 	smblib_get_charge_param(chg, &chg->param.aicl_5v_threshold,
@@ -2868,8 +2944,21 @@ static int smb5_init_hw(struct smb5 *chip)
 		return rc;
 	}
 
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	rc = smblib_masked_write(chg, USBIN_AICL_OPTIONS_CFG_REG,
+				 BIT(7) | BIT(5) | BIT(3), 0);
+	if (rc < 0) {
+		dev_err(chg->dev, "Couldn't configure AICL rc=%d\n", rc);
+		return rc;
+	}
+
+	rc = smblib_write(chg, AICL_RERUN_TIME_CFG_REG,
+				AICL_RERUN_TIME_180S_VAL);
+#else
 	rc = smblib_write(chg, AICL_RERUN_TIME_CFG_REG,
 				AICL_RERUN_TIME_12S_VAL);
+#endif
+
 	if (rc < 0) {
 		dev_err(chg->dev,
 			"Couldn't configure AICL rerun interval rc=%d\n", rc);
@@ -3661,6 +3750,9 @@ static int smb5_probe(struct platform_device *pdev)
 	chg->connector_health = -EINVAL;
 	chg->otg_present = false;
 	chg->main_fcc_max = -EINVAL;
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	chg->call_state = 1;
+#endif
 	mutex_init(&chg->adc_lock);
 
 	chg->regmap = dev_get_regmap(chg->dev->parent, NULL);
@@ -3668,6 +3760,10 @@ static int smb5_probe(struct platform_device *pdev)
 		pr_err("parent regmap is missing\n");
 		return -EINVAL;
 	}
+
+#ifdef CONFIG_MACH_XIAOMI_F9S
+	wt_smbchip = chg;
+#endif
 
 	rc = smb5_chg_config_init(chip);
 	if (rc < 0) {
