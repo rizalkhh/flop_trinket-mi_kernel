@@ -4427,8 +4427,9 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
 
 		if (se == curr) {
 			second = __pick_first_entity(cfs_rq);
-			if (sched_feat(STRICT_SKIP_BUDDY))
-				strict_skip = true;
+#ifdef SCHED_FEAT_STRICT_SKIP_BUDDY
+			strict_skip = true;
+#endif
 		} else {
 			second = __pick_next_entity(se);
 			if (!second || (curr && entity_before(curr, second)))
