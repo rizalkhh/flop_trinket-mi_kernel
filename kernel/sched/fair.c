@@ -6044,15 +6044,17 @@ unsigned long capacity_curr_of(int cpu)
 	return cap_scale(max_cap, scale_freq);
 }
 
-inline bool energy_aware(void)
-{
-	return sysctl_sched_energy_aware;
-}
-
 /*
  * Externally visible function. Let's keep the one above
  * so that the check is inlined/optimized in the sched paths.
  */
+
+bool pelt_energy_aware = true;
+inline bool energy_aware(void)
+{
+	return (likely(pelt_energy_aware)) && sched_feat(ENERGY_AWARE);
+}
+
 bool sched_is_energy_aware(void)
 {
 	return energy_aware();
