@@ -64,15 +64,36 @@ _kgsl_get_pool_from_order(unsigned int order)
 	return NULL;
 }
 
+static void kgsl_pool_sync_for_device(struct device *dev, struct page *page,
+		size_t size)
+{
+	struct scatterlist sg;
+
+	/* The caller may choose not to specify a device on purpose */
+	if (!dev)
+		return;
+
+	sg_init_table(&sg, 1);
+	sg_set_page(&sg, page, size, 0);
+	sg_dma_address(&sg) = page_to_phys(page);
+
+	dma_sync_sg_for_device(dev, &sg, 1, DMA_BIDIRECTIONAL);
+}
+
 /* Map the page into kernel and zero it out */
 static void
-_kgsl_pool_zero_page(struct page *p)
+_kgsl_pool_zero_page(struct page *p, unsigned int pool_order,
+		struct device *dev)
 {
-	void *addr = kmap_atomic(p);
-	memset(addr, 0, PAGE_SIZE);
-	dmac_flush_range(addr, addr + PAGE_SIZE);
-	kunmap_atomic(addr);
+	int i;
 
+	for (i = 0; i < (1 << pool_order); i++) {
+		struct page *page = nth_page(p, i);
+
+		clear_highpage(page);
+	}
+
+	kgsl_pool_sync_for_device(dev, p, PAGE_SIZE << pool_order);
 }
 
 /* Add a page to specified pool */
@@ -318,7 +339,7 @@ static int kgsl_pool_get_retry_order(unsigned int order)
  * Return total page count on success and negative value on failure
  */
 int kgsl_pool_alloc_page(int *page_size, struct page **pages,
-			unsigned int pages_len, unsigned int *align)
+			unsigned int pages_len, unsigned int *align, struct device *dev)
 {
 	int j;
 	int pcount = 0;
@@ -397,9 +418,10 @@ int kgsl_pool_alloc_page(int *page_size, struct page **pages,
 	}
 
 done:
+	_kgsl_pool_zero_page(page, order, dev);
+
 	for (j = 0; j < (*page_size >> PAGE_SHIFT); j++) {
 		p = nth_page(page, j);
-		_kgsl_pool_zero_page(p);
 		pages[pcount] = p;
 		pcount++;
 	}
