@@ -25,6 +25,7 @@
 #include <linux/of_batterydata.h>
 #include <linux/ktime.h>
 #include <linux/gpio.h>
+#include <linux/ratelimit.h>
 #include "smb5-lib.h"
 #include "smb5-reg.h"
 #include "schgm-flash.h"
@@ -2624,14 +2625,14 @@ int smblib_set_prop_system_temp_level(struct smb_charger *chg,
 
 	/* backlight off and not-incall, force minimum level 3 */
 	if ((lct_backlight_off) && (LctIsInCall == 0) && (val->intval > 2)) {
-		pr_info("level ignored: backlight_off:%d level:%d",
+		pr_info_ratelimited("level ignored: backlight_off:%d level:%d",
 			lct_backlight_off, val->intval);
 		return 0;
 	}
 
 	/* incall,force level 5 */
 	if ((LctIsInCall == 1) && (val->intval != 5)) {
-		pr_info("level ignored: LctIsInCall:%d level:%d",
+		pr_info_ratelimited("level ignored: LctIsInCall:%d level:%d",
 			LctIsInCall, val->intval);
 		return 0;
 	}
@@ -2641,9 +2642,9 @@ int smblib_set_prop_system_temp_level(struct smb_charger *chg,
 	if (bypass_charging) {
 		if (chg->thermal_levels - 2 > system_temp_level) system_temp_level = chg->thermal_levels-2;
 		if (system_temp_level < 0) system_temp_level = 0;
-		pr_info("%s limited charging enabled %d",__FUNCTION__, system_temp_level);
+		pr_info_ratelimited("%s limited charging enabled %d",__FUNCTION__, system_temp_level);
 	} else if (system_temp_level > 0) {
-		pr_info("%s charging enabled, but thermal limited %d",__FUNCTION__, system_temp_level);
+		pr_info_ratelimited("%s charging enabled, but thermal limited %d",__FUNCTION__, system_temp_level);
 	}
 
 	if (system_temp_level >= chg->thermal_levels)

@@ -27,6 +27,7 @@
 #include <linux/qpnp/qpnp-revid.h>
 #include <linux/regulator/driver.h>
 #include <linux/regulator/of_regulator.h>
+#include <linux/ratelimit.h>
 #include <linux/regulator/machine.h>
 #include <linux/iio/consumer.h>
 #include <linux/pmic-voter.h>
@@ -3828,13 +3829,13 @@ static int thermal_notifier_callback(struct notifier_block *noti,
 		if (event == MSM_DRM_EARLY_EVENT_BLANK &&
 		    *blank == MSM_DRM_BLANK_UNBLANK) {
 			lct_backlight_off = false;
-			pr_info("thermal_notifier lct_backlight_off:%d",
+			pr_info_ratelimited("thermal_notifier lct_backlight_off:%d",
 				lct_backlight_off);
 			schedule_work(&chg->fb_notify_work);
 		} else if (event == MSM_DRM_EVENT_BLANK &&
 			   *blank == MSM_DRM_BLANK_POWERDOWN) {
 			lct_backlight_off = true;
-			pr_info("thermal_notifier lct_backlight_off:%d",
+			pr_info_ratelimited("thermal_notifier lct_backlight_off:%d",
 				lct_backlight_off);
 			schedule_work(&chg->fb_notify_work);
 		}
@@ -3898,7 +3899,7 @@ static int smb5_show_charger_status(struct smb5 *chip)
 	}
 	batt_charge_type = val.intval;
 
-	pr_info("SMB5 status - usb:present=%d type=%d batt:present = %d health = %d charge = %d\n",
+	pr_debug_ratelimited("SMB5 status - usb:present=%d type=%d batt:present = %d health = %d charge = %d\n",
 		usb_present, chg->real_charger_type,
 		batt_present, batt_health, batt_charge_type);
 	return rc;
@@ -4074,7 +4075,7 @@ static int smb5_probe(struct platform_device *pdev)
 		rc = sysfs_create_file(&chg->dev->kobj,
 					&attrs2[attr_count2].attr);
 		if (rc < 0) {
-			pr_info(" sysfs create file fail %d\n",rc);
+			pr_debug_ratelimited(" sysfs create file fail %d\n",rc);
 			sysfs_remove_file(&chg->dev->kobj,
 					  &attrs2[attr_count2].attr);
 		}
@@ -4129,7 +4130,7 @@ static int smb5_probe(struct platform_device *pdev)
 	lct_register_powermanger(chg);
 #endif
 
-	pr_info("QPNP SMB5 probed successfully\n");
+	pr_debug_ratelimited("QPNP SMB5 probed successfully\n");
 
 	return rc;
 
