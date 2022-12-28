@@ -767,44 +767,96 @@ static void qrtr_backup_deinit(void)
 int qrtr_endpoint_post(struct qrtr_endpoint *ep, const void *data, size_t len)
 {
 	struct qrtr_node *node = ep->node;
-	const struct qrtr_hdr *phdr = data;
+	const struct qrtr_hdr_v1 *v1;
+	const struct qrtr_hdr_v2 *v2;
 	struct sk_buff *skb;
-	unsigned int psize;
+	struct qrtr_cb *cb;
 	unsigned int size;
-	unsigned int type;
+	int errcode;
 	unsigned int ver;
-	unsigned int dst;
+	size_t hdrlen;
 
-	if (len < QRTR_HDR_SIZE || len & 3)
+	if (len & 3)
 		return -EINVAL;
 
-	ver = le32_to_cpu(phdr->version);
-	size = le32_to_cpu(phdr->size);
-	type = le32_to_cpu(phdr->type);
-	dst = le32_to_cpu(phdr->dst_port_id);
+	skb = alloc_skb_with_frags(sizeof(*v1), len, 0, &errcode, GFP_ATOMIC);
+	if (!skb) {
+		skb = qrtr_get_backup(len);
+		if (!skb) {
+			pr_err("qrtr: Unable to get skb with len:%lu\n", len);
+			return -ENOMEM;
+		}
+	}
 
-	psize = (size + 3) & ~3;
+	skb_reserve(skb, sizeof(*v1));
+	cb = (struct qrtr_cb *)skb->cb;
 
-	if (ver != QRTR_PROTO_VER)
-		return -EINVAL;
+	/* Version field in v1 is little endian, so this works for both cases */
+	ver = *(u8 *)data;
 
-	if (len != psize + QRTR_HDR_SIZE)
-		return -EINVAL;
+	switch (ver) {
+	case QRTR_PROTO_VER_1:
+		v1 = data;
+		hdrlen = sizeof(*v1);
 
-	if (dst != QRTR_PORT_CTRL && type != QRTR_TYPE_DATA)
-		return -EINVAL;
+		cb->type = le32_to_cpu(v1->type);
+		cb->src_node = le32_to_cpu(v1->src_node_id);
+		cb->src_port = le32_to_cpu(v1->src_port_id);
+		cb->confirm_rx = !!v1->confirm_rx;
+		cb->dst_node = le32_to_cpu(v1->dst_node_id);
+		cb->dst_port = le32_to_cpu(v1->dst_port_id);
 
-	skb = __netdev_alloc_skb(NULL, len, GFP_ATOMIC | __GFP_NOWARN);
-	if (!skb)
-		return -ENOMEM;
+		size = le32_to_cpu(v1->size);
+		break;
+	case QRTR_PROTO_VER_2:
+		v2 = data;
+		hdrlen = sizeof(*v2) + v2->optlen;
 
-	skb_reset_transport_header(skb);
-	skb_put_data(skb, data, len);
+		cb->type = v2->type;
+		cb->confirm_rx = !!(v2->flags & QRTR_FLAGS_CONFIRM_RX);
+		cb->src_node = le16_to_cpu(v2->src_node_id);
+		cb->src_port = le16_to_cpu(v2->src_port_id);
+		cb->dst_node = le16_to_cpu(v2->dst_node_id);
+		cb->dst_port = le16_to_cpu(v2->dst_port_id);
+
+		if (cb->src_port == (u16)QRTR_PORT_CTRL)
+			cb->src_port = QRTR_PORT_CTRL;
+		if (cb->dst_port == (u16)QRTR_PORT_CTRL)
+			cb->dst_port = QRTR_PORT_CTRL;
+
+		size = le32_to_cpu(v2->size);
+		break;
+	default:
+		pr_err("qrtr: Invalid version %d\n", ver);
+		goto err;
+	}
+
+	if (cb->dst_port == QRTR_PORT_CTRL_LEGACY)
+		cb->dst_port = QRTR_PORT_CTRL;
+
+	if (len != ALIGN(size, 4) + hdrlen)
+		goto err;
+
+	if (cb->dst_port != QRTR_PORT_CTRL && cb->type != QRTR_TYPE_DATA &&
+	    cb->type != QRTR_TYPE_RESUME_TX)
+		goto err;
+
+	__pm_wakeup_event(node->ws, 0);
+
+	skb->data_len = size;
+	skb->len = size;
+	skb_store_bits(skb, 0, data + hdrlen, size);
+	qrtr_log_rx_msg(node, skb);
 
 	skb_queue_tail(&node->rx_queue, skb);
-	schedule_work(&node->work);
+	kthread_queue_work(&node->kworker, &node->read_data);
 
 	return 0;
+
+err:
+	kfree_skb(skb);
+	return -EINVAL;
+
 }
 EXPORT_SYMBOL_GPL(qrtr_endpoint_post);
 
@@ -1492,7 +1544,7 @@ static int qrtr_bcast_enqueue(struct qrtr_node *node, struct sk_buff *skb,
 	list_for_each_entry(node, &qrtr_all_epts, item) {
 		if (node->nid == QRTR_EP_NID_AUTO && type != QRTR_TYPE_HELLO)
 			continue;
-		skbn = pskb_copy(skb, GFP_KERNEL);
+		skbn = skb_clone(skb, GFP_KERNEL);
 		if (!skbn)
 			break;
 		skb_set_owner_w(skbn, skb->sk);
