@@ -32,6 +32,9 @@ obj-$(CONFIG_CPU_FREQ) += cpufreq.o
 obj-$(CONFIG_CPU_FREQ_GOV_SCHEDUTIL) += cpufreq_schedutil.o
 obj-$(CONFIG_MEMBARRIER) += membarrier.o
 obj-$(CONFIG_SCHED_CORE_CTL) += core_ctl.o
+ifndef CONFIG_SCHED_CORE_CTL
+obj-$(CONFIG_SCHED_WALT) += rotation_ctl.o
+endif
 obj-$(CONFIG_PSI) += psi.o
 
 ifneq ($(CONFIG_SCHED_WALT),y)
