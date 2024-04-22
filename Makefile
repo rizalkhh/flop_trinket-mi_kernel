@@ -912,6 +912,9 @@ lto-clang-flags	:= -flto
 endif
 lto-clang-flags += -fvisibility=hidden
 
+#Enable MLGO for register allocation.
+LDFLAGS += -mllvm -regalloc-enable-advisor=release
+
 KBUILD_LDFLAGS_MODULE += -T scripts/module-lto.lds
 
 KBUILD_LDS_MODULE += $(srctree)/scripts/module-lto.lds
