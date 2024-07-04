@@ -7,7 +7,6 @@
 #include "compress.h"
 #include <linux/overflow.h>
 #include <linux/prefetch.h>
-#include <linux/vmalloc.h>
 #include <linux/slab.h>
 #include <linux/cpuhotplug.h>
 
@@ -100,9 +99,16 @@ static void z_erofs_free_pcluster(struct z_erofs_pcluster *pcl)
 	DBG_BUGON(1);
 }
 
+/*
+ * a compressed_pages[] placeholder in order to avoid
+ * being filled with file pages for in-place decompression.
+ */
+#define PAGE_UNALLOCATED     ((void *)0x5F0E4B1D)
+
 /* how to allocate cached pages for a pcluster */
 enum z_erofs_cache_alloctype {
 	DONTALLOC,	/* don't allocate any cached pages */
+	DELAYEDALLOC,	/* delayed allocation (at the time of submitting io) */
 	/*
 	 * try to use cached I/O if page allocation succeeds or fallback
 	 * to in-place I/O instead to avoid any direct reclaim.
@@ -141,20 +147,15 @@ static void erofs_destroy_percpu_workers(void)
 
 static struct kthread_worker *erofs_init_percpu_worker(int cpu)
 {
-	struct sched_param param;
-
 	struct kthread_worker *worker =
 		kthread_create_worker_on_cpu(cpu, 0, "erofs_worker/%u", cpu);
 
 	if (IS_ERR(worker))
 		return worker;
-	if (IS_ENABLED(CONFIG_EROFS_FS_PCPU_KTHREAD_HIPRI)){
-		param.sched_priority = 1;
-		sched_setscheduler_nocheck(worker->task, SCHED_FIFO, &param);
-	} else {
-		param.sched_priority = 0;
-		sched_setscheduler_nocheck(worker->task, SCHED_FIFO, &param);
-	}
+	if (IS_ENABLED(CONFIG_EROFS_FS_PCPU_KTHREAD_HIPRI))
+		sched_set_fifo_low(worker->task);
+	else
+		sched_set_normal(worker->task, 0);
 	return worker;
 }
 
@@ -402,6 +403,10 @@ static void preload_compressed_pages(struct z_erofs_collector *clt,
 			/* I/O is needed, no possible to decompress directly */
 			standalone = false;
 			switch (type) {
+			case DELAYEDALLOC:
+				t = tagptr_init(compressed_page_t,
+						PAGE_UNALLOCATED);
+				break;
 			case TRYALLOC:
 				newpage = erofs_allocpage(pagepool, gfp);
 				if (!newpage)
@@ -440,7 +445,6 @@ int erofs_try_to_free_all_cached_pages(struct erofs_sb_info *sbi,
 {
 	struct z_erofs_pcluster *const pcl =
 		container_of(grp, struct z_erofs_pcluster, obj);
-	struct address_space *const mapping = MNGD_MAPPING(sbi);
 	int i;
 
 	/*
@@ -457,7 +461,7 @@ int erofs_try_to_free_all_cached_pages(struct erofs_sb_info *sbi,
 		if (!trylock_page(page))
 			return -EBUSY;
 
-		if (page->mapping != mapping)
+		if (!erofs_page_is_managed(sbi, page))
 			continue;
 
 		/* barrier is implied in the following 'unlock_page' */
@@ -471,8 +475,7 @@ int erofs_try_to_free_all_cached_pages(struct erofs_sb_info *sbi,
 	return 0;
 }
 
-int erofs_try_to_free_cached_page(struct address_space *mapping,
-				  struct page *page)
+int erofs_try_to_free_cached_page(struct page *page)
 {
 	struct z_erofs_pcluster *const pcl = (void *)page_private(page);
 	int ret = 0;	/* 0 - busy */
@@ -512,8 +515,8 @@ static bool z_erofs_try_inplace_io(struct z_erofs_collector *clt,
 
 /* callers must be with collection lock held */
 static int z_erofs_attach_page(struct z_erofs_collector *clt,
-			       struct page *page, enum z_erofs_page_type type,
-			       bool pvec_safereuse)
+			       struct page *page,
+			       enum z_erofs_page_type type)
 {
 	int ret;
 
@@ -523,9 +526,9 @@ static int z_erofs_attach_page(struct z_erofs_collector *clt,
 	    z_erofs_try_inplace_io(clt, page))
 		return 0;
 
-	ret = z_erofs_pagevec_enqueue(&clt->vector, page, type,
-				      pvec_safereuse);
+	ret = z_erofs_pagevec_enqueue(&clt->vector, page, type);
 	clt->cl->vcnt += (unsigned int)ret;
+
 	return ret ? 0 : -EAGAIN;
 }
 
@@ -861,8 +864,7 @@ hitted:
 		tight &= (clt->mode >= COLLECT_PRIMARY_FOLLOWED);
 
 retry:
-	err = z_erofs_attach_page(clt, page, page_type,
-				  clt->mode >= COLLECT_PRIMARY_FOLLOWED);
+	err = z_erofs_attach_page(clt, page, page_type);
 	/* should allocate an additional short-lived page for pagevec */
 	if (err == -EAGAIN) {
 		struct page *const newpage =
@@ -870,7 +872,7 @@ retry:
 
 		set_page_private(newpage, Z_EROFS_SHORTLIVED_PAGE);
 		err = z_erofs_attach_page(clt, newpage,
-					  Z_EROFS_PAGE_TYPE_EXCLUSIVE, true);
+					  Z_EROFS_PAGE_TYPE_EXCLUSIVE);
 		if (!err)
 			goto retry;
 	}
@@ -944,7 +946,6 @@ static void z_erofs_decompress_kickoff(struct z_erofs_decompressqueue *io,
 	z_erofs_decompressqueue_work(&io->u.work);
 }
 
-
 static bool z_erofs_page_is_invalidated(struct page *page)
 {
 	return !page->mapping && !z_erofs_is_shortlived_page(page);
@@ -954,6 +955,7 @@ static void z_erofs_decompressqueue_endio(struct bio *bio)
 {
 	tagptr1_t t = tagptr_init(tagptr1_t, bio->bi_private);
 	struct z_erofs_decompressqueue *q = tagptr_unfold_ptr(t);
+	blk_status_t err = bio->bi_status;
 	struct bio_vec *bvec;
 	unsigned int i;
 
@@ -963,11 +965,11 @@ static void z_erofs_decompressqueue_endio(struct bio *bio)
 		DBG_BUGON(PageUptodate(page));
 		DBG_BUGON(z_erofs_page_is_invalidated(page));
 
-		if (bio->bi_error)
+		if (err)
 			SetPageError(page);
 
 		if (erofs_page_is_managed(EROFS_SB(q->sb), page)) {
-			if (!bio->bi_error)
+			if (!err)
 				SetPageUptodate(page);
 			unlock_page(page);
 		}
@@ -1004,15 +1006,13 @@ static int z_erofs_decompress_pcluster(struct super_block *sb,
 		   mutex_trylock(&z_pagemap_global_lock)) {
 		pages = z_pagemap_global;
 	} else {
-		pages = kmalloc_array(nr_pages, sizeof(struct page *),
-				       GFP_KERNEL);
+		gfp_t gfp_flags = GFP_KERNEL;
 
-		if (!pages) 
-			pages = vmalloc(nr_pages * sizeof(struct page *));
+		if (nr_pages > Z_EROFS_VMAP_GLOBAL_PAGES)
+			gfp_flags |= __GFP_NOFAIL;
 
-		if (!pages && nr_pages > Z_EROFS_VMAP_GLOBAL_PAGES)
-			pages = kmalloc_array(nr_pages, sizeof(struct page *),
-				       GFP_KERNEL | __GFP_NOFAIL);
+		pages = kvmalloc_array(nr_pages, sizeof(struct page *),
+				       gfp_flags);
 
 		/* fallback to global pagemap for the lowmem scenario */
 		if (!pages) {
@@ -1242,6 +1242,15 @@ repeat:
 	if (!page)
 		goto out_allocpage;
 
+	/*
+	 * the cached page has not been allocated and
+	 * an placeholder is out there, prepare it now.
+	 */
+	if (page == PAGE_UNALLOCATED) {
+		tocache = true;
+		goto out_allocpage;
+	}
+
 	/* process the target tagged pointer */
 	t = tagptr_init(compressed_page_t, page);
 	justfound = tagptr_unfold_tags(t);
@@ -1339,7 +1348,7 @@ jobqueue_init(struct super_block *sb,
 	struct z_erofs_decompressqueue *q;
 
 	if (fg && !*fg) {
-		q = kzalloc(sizeof(*q), GFP_KERNEL | __GFP_NOWARN);
+		q = kvzalloc(sizeof(*q), GFP_KERNEL | __GFP_NOWARN);
 		if (!q) {
 			*fg = true;
 			goto fg_out;
@@ -1462,7 +1471,7 @@ submit_bio_retry:
 				bio = bio_alloc(GFP_NOIO, BIO_MAX_PAGES);
 
 				bio->bi_end_io = z_erofs_decompressqueue_endio;
-				bio->bi_bdev = sb->s_bdev;
+				bio_set_dev(bio, sb->s_bdev);
 				bio->bi_iter.bi_sector = (sector_t)cur <<
 					LOG_SECTORS_PER_BLOCK;
 				bio->bi_private = bi_private;
