@@ -89,6 +89,8 @@ static int set_cpu_min_freq(const char *buf, const struct kernel_param *kp)
 	if (is_battery_saver_on())
 		cp = disable;
 
+	int ret = 0;
+
 	if (!touchboost) {
 		pr_info("Ignored touchboost event!\n");
 		return ret;
