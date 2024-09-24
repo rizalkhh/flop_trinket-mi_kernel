@@ -8301,6 +8301,7 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_
 	struct cfs_rq *cfs_rq = task_cfs_rq(curr);
 	int scale = cfs_rq->nr_running >= sched_nr_latency;
 	int next_buddy_marked = 0;
+	int oom_score_adj = p->signal->oom_score_adj;
 
 	if (unlikely(se == pse))
 		return;
@@ -8314,7 +8315,10 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_
 	if (unlikely(throttled_hierarchy(cfs_rq_of(pse))))
 		return;
 
-	if (sched_feat(NEXT_BUDDY) && scale && !(wake_flags & WF_FORK)) {
+	if (!oom_score_adj && p->sched_class == &fair_sched_class)
+		reweight_task(p, 0);
+
+	if (scale && !(wake_flags & WF_FORK) && !oom_score_adj) {
 		set_next_buddy(pse);
 		next_buddy_marked = 1;
 	}
