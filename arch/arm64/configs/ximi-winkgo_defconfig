@@ -5149,6 +5149,7 @@ CONFIG_STM=y
 # CONFIG_TEE is not set
 CONFIG_SENSORS_SSC=y
 # CONFIG_ESOC is not set
+CONFIG_FSTABDT_DISABLE=y
 
 #
 # Firmware Drivers
