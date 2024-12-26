@@ -385,6 +385,7 @@
 	firmware: firmware {
 		android {
 			compatible = "android,firmware";
+			boot_devices = "soc/4744000.sdhci";
 			vbmeta {
 				compatible = "android,vbmeta";
 				parts = "vbmeta,boot,system,vendor,dtbo,recovery";
