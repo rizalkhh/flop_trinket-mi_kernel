@@ -710,8 +710,10 @@ KBUILD_CFLAGS   += -O3
 ifeq ($(cc-name),clang)
 KBUILD_CFLAGS	+= -mcpu=cortex-a53 -mtune=cortex-a53
 
-#Enable MLGO for register allocation.
+ifeq ($(shell echo "$CONFIG_CC_VERSION_TEXT" | grep -qE 'Android|Neutron'; echo $?),0)
 KBUILD_CFLAGS   += -mllvm -regalloc-enable-advisor=release
+endif
+
 #Enable hot cold split optimization
 KBUILD_CFLAGS   += -mllvm -hot-cold-split=true
 
@@ -913,7 +915,9 @@ endif
 lto-clang-flags += -fvisibility=hidden
 
 #Enable MLGO for register allocation.
+ifeq ($(shell echo "$CONFIG_CC_VERSION_TEXT" | grep -qE 'Android|Neutron'; echo $?),0)
 LDFLAGS += -mllvm -regalloc-enable-advisor=release
+endif
 
 KBUILD_LDFLAGS_MODULE += -T scripts/module-lto.lds
 
