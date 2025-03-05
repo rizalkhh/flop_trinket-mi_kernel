@@ -59,6 +59,7 @@ BASE_FRAGMENT="vendor/xiaomi-trinket.config"
 KERNEL_URL="https://github.com/Flopster101/flop_ginkgo_kernel"
 SECONDS=0 # builtin bash timer
 DATE="$(date '+%Y%m%d-%H%M')"
+BUILD_HOST="$USER@$(hostname)"
 # Paths
 SD_DIR="$WP/sdclang"
 AC_DIR="$WP/aospclang"
@@ -438,6 +439,7 @@ CAPTION_BUILD="Build info:
 *Compiler*: \`${KBUILD_COMPILER_STRING}\`
 *Linker*: \`$("${LINKER}" -v | head -n1 | sed 's/(compatible with [^)]*)//' |
             head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')\`
+*Build host*: \`${BUILD_HOST}\`
 *Branch*: \`$(git rev-parse --abbrev-ref HEAD)\`
 *Commit*: [($(git rev-parse HEAD | cut -c -7))]($(echo $KERNEL_URL)/commit/$(git rev-parse HEAD))
 *Build type*: \`$BUILD_TYPE\`
