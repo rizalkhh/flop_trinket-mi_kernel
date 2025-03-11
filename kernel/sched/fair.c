@@ -99,11 +99,11 @@ walt_dec_cfs_rq_stats(struct cfs_rq *cfs_rq, struct task_struct *p) {}
  * (CFS  default: 6ms * (1 + ilog(ncpus)), units: nanoseconds)
  */
 #ifdef CONFIG_SCHED_BORE
-unsigned int sysctl_sched_latency			= 24000000ULL;
-static unsigned int normalized_sysctl_sched_latency	= 24000000ULL;
+unsigned int sysctl_sched_latency			= 4000000ULL;
+static unsigned int normalized_sysctl_sched_latency	= 4000000ULL;
 #else // CONFIG_SCHED_BORE
-unsigned int sysctl_sched_latency			= 10000000ULL;
-unsigned int normalized_sysctl_sched_latency		= 10000000ULL;
+unsigned int sysctl_sched_latency			= 4000000ULL;
+unsigned int normalized_sysctl_sched_latency		= 4000000ULL;
 #endif // CONFIG_SCHED_BORE
 
 /*
@@ -130,7 +130,7 @@ unsigned int sysctl_sched_cstate_aware = 1;
 #ifdef CONFIG_SCHED_BORE
 enum sched_tunable_scaling sysctl_sched_tunable_scaling = SCHED_TUNABLESCALING_NONE;
 #else // CONFIG_SCHED_BORE
-enum sched_tunable_scaling sysctl_sched_tunable_scaling = SCHED_TUNABLESCALING_LOG;
+enum sched_tunable_scaling sysctl_sched_tunable_scaling = SCHED_TUNABLESCALING_NONE;
 #endif // CONFIG_SCHED_BORE
 
 /*
@@ -140,11 +140,11 @@ enum sched_tunable_scaling sysctl_sched_tunable_scaling = SCHED_TUNABLESCALING_L
  * (CFS  default: 0.75 msec * (1 + ilog(ncpus)), units: nanoseconds)
  */
 #ifdef CONFIG_SCHED_BORE
-unsigned int sysctl_sched_min_granularity			= 3000000ULL;
-unsigned int normalized_sysctl_sched_min_granularity	= 3000000ULL;
+unsigned int sysctl_sched_min_granularity			= 2000000ULL;
+unsigned int normalized_sysctl_sched_min_granularity	= 2000000ULL;
 #else // CONFIG_SCHED_BORE 
-unsigned int sysctl_sched_min_granularity		= 2500000ULL;
-unsigned int normalized_sysctl_sched_min_granularity	= 2500000ULL;
+unsigned int sysctl_sched_min_granularity		= 2000000ULL;
+unsigned int normalized_sysctl_sched_min_granularity	= 2000000ULL;
 #endif // CONFIG_SCHED_BORE
 
 /*
@@ -156,7 +156,7 @@ static unsigned int sched_nr_latency = 6;
  * After fork, child runs first. If set to 0 (default) then
  * parent will (try to) run first.
  */
-unsigned int sysctl_sched_child_runs_first __read_mostly;
+unsigned int sysctl_sched_child_runs_first __read_mostly = 1;
 
 /*
  * SCHED_OTHER wake-up granularity.
@@ -176,7 +176,7 @@ unsigned int sysctl_sched_wakeup_granularity		= 5000000UL;
 unsigned int normalized_sysctl_sched_wakeup_granularity	= 5000000UL;
 #endif // CONFIG_SCHED_BORE
 
-const_debug unsigned int sysctl_sched_migration_cost	= 1000000UL;
+const_debug unsigned int sysctl_sched_migration_cost	= 5000000UL;
 DEFINE_PER_CPU_READ_MOSTLY(int, sched_load_boost);
 
 #ifdef CONFIG_SCHED_BORE
