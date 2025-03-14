@@ -6,20 +6,25 @@
 #ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
 #include <asm/setup.h>
 #endif
+#include <linux/string.h>
 
 #ifdef CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG
 extern int susfs_spoof_cmdline_or_bootconfig(struct seq_file *m);
 #endif
 
 #ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
-#define INITRAMFS_STR_FIND "skip_initramf"
+#define INITRAMFS_STR_FIND	"skip_initramf"
 #define INITRAMFS_STR_REPLACE "want_initramf"
-#define INITRAMFS_STR_LEN (sizeof(INITRAMFS_STR_FIND) - 1)
+#define INITRAMFS_STR_LEN	 (sizeof(INITRAMFS_STR_FIND) - 1)
 
 static char proc_command_line[COMMAND_LINE_SIZE];
 
-static void proc_command_line_init(void) {
+static void proc_command_line_init(void)
+{
 	char *offset_addr;
+
+	if (!strstr(saved_command_line, "fstabdt_keep"))
+		return;
 
 	strcpy(proc_command_line, saved_command_line);
 
@@ -29,7 +34,7 @@ static void proc_command_line_init(void) {
 
 	memcpy(offset_addr, INITRAMFS_STR_REPLACE, INITRAMFS_STR_LEN);
 }
-#endif
+#endif /* CONFIG_INITRAMFS_IGNORE_SKIP_FLAG */
 
 static int cmdline_proc_show(struct seq_file *m, void *v)
 {
@@ -39,13 +44,22 @@ static int cmdline_proc_show(struct seq_file *m, void *v)
 		return 0;
 	}
 #endif
+
 #ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
-    seq_puts(m, proc_command_line);
-    seq_putc(m, '\n');
-#else
-    seq_puts(m, saved_command_line);
-    seq_putc(m, '\n');
+	/*
+	 * At runtime, if "fstabdt_keep" is present then output the modified command line;
+	 * otherwise, output the original saved_command_line.
+	 */
+	if (strstr(saved_command_line, "fstabdt_keep"))
+		seq_puts(m, proc_command_line);
+	else
+		seq_puts(m, saved_command_line);
+	seq_putc(m, '\n');
+	return 0;
 #endif
+
+	seq_puts(m, saved_command_line);
+	seq_putc(m, '\n');
 	return 0;
 }
 
@@ -55,9 +69,9 @@ static int cmdline_proc_open(struct inode *inode, struct file *file)
 }
 
 static const struct file_operations cmdline_proc_fops = {
-	.open		= cmdline_proc_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
+	.open	   = cmdline_proc_open,
+	.read	   = seq_read,
+	.llseek	 = seq_lseek,
 	.release	= single_release,
 };
 
