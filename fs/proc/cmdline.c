@@ -14,8 +14,12 @@
 
 static char proc_command_line[COMMAND_LINE_SIZE];
 
-static void proc_command_line_init(void) {
+static void proc_command_line_init(void)
+{
 	char *offset_addr;
+
+	if (!strstr(saved_command_line, "fstabdt_keep"))
+		return;
 
 	strcpy(proc_command_line, saved_command_line);
 
@@ -25,17 +29,22 @@ static void proc_command_line_init(void) {
 
 	memcpy(offset_addr, INITRAMFS_STR_REPLACE, INITRAMFS_STR_LEN);
 }
-#endif
+#endif /* CONFIG_INITRAMFS_IGNORE_SKIP_FLAG */
 
 static int cmdline_proc_show(struct seq_file *m, void *v)
 {
+
 #ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
-        seq_puts(m, proc_command_line);
-        seq_putc(m, '\n');
-#else
-        seq_puts(m, saved_command_line);
-        seq_putc(m, '\n');
+	if (strstr(saved_command_line, "fstabdt_keep"))
+		seq_puts(m, proc_command_line);
+	else
+		seq_puts(m, saved_command_line);
+	seq_putc(m, '\n');
+	return 0;
 #endif
+
+	seq_puts(m, saved_command_line);
+	seq_putc(m, '\n');
 	return 0;
 }
 
@@ -46,8 +55,8 @@ static int cmdline_proc_open(struct inode *inode, struct file *file)
 
 static const struct file_operations cmdline_proc_fops = {
 	.open		= cmdline_proc_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
+ 	.read		= seq_read,
+ 	.llseek		= seq_lseek,
 	.release	= single_release,
 };
 
