@@ -96,7 +96,7 @@ int erofs_register_workgroup(struct super_block *sb,
 		return err;
 
 	sbi = EROFS_SB(sb);
-	rcu_read_lock();
+	xa_lock(&sbi->workstn_tree);
 
 	/*
 	 * Bump up reference count before making this workgroup
@@ -113,7 +113,7 @@ int erofs_register_workgroup(struct super_block *sb,
 		 */
 		__erofs_workgroup_put(grp);
 
-	rcu_read_unlock();
+	xa_unlock(&sbi->workstn_tree);
 	radix_tree_preload_end();
 	return err;
 }
@@ -179,7 +179,7 @@ static unsigned long erofs_shrink_workstation(struct erofs_sb_info *sbi,
 
 	int i, found;
 repeat:
-	rcu_read_lock();
+	xa_lock(&sbi->workstn_tree);
 
 	found = radix_tree_gang_lookup(&sbi->workstn_tree,
 				       batch, first_index, PAGEVEC_SIZE);
@@ -197,7 +197,7 @@ repeat:
 		if (!--nr_shrink)
 			break;
 	}
-	rcu_read_unlock();
+	xa_unlock(&sbi->workstn_tree);
 
 	if (i && nr_shrink)
 		goto repeat;
