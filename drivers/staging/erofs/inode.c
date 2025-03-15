@@ -12,8 +12,6 @@
  */
 #include "xattr.h"
 
-#include <trace/events/erofs.h>
-
 /* no locking */
 static int read_inode(struct inode *inode, void *data)
 {
@@ -153,8 +151,6 @@ static int fill_inode(struct inode *inode, int isdir)
 	int err;
 	erofs_blk_t blkaddr;
 	unsigned ofs;
-
-	trace_erofs_fill_inode(inode, isdir);
 
 	blkaddr = erofs_blknr(iloc(sbi, vi->nid));
 	ofs = erofs_blkoff(iloc(sbi, vi->nid));
