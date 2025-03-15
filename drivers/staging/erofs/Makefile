@@ -8,5 +8,4 @@ obj-$(CONFIG_EROFS_FS) += erofs.o
 # staging requirement: to be self-contained in its own directory
 ccflags-y += -I$(src)/include
 erofs-objs := super.o inode.o data.o namei.o dir.o
-erofs-$(CONFIG_EROFS_FS_XATTR) += xattr.o
 
