@@ -857,7 +857,6 @@ repeat:
 	for (i = 0; i < nr_pages; ++i)
 		pages[i] = NULL;
 
-	err = 0;
 	z_erofs_pagevec_ctor_init(&ctor,
 		Z_EROFS_VLE_INLINE_PAGEVECS, work->pagevec, 0);
 
@@ -879,17 +878,8 @@ repeat:
 			pagenr = z_erofs_onlinepage_index(page);
 
 		DBG_BUGON(pagenr >= nr_pages);
+		DBG_BUGON(pages[pagenr]);
 
-		/*
-		 * currently EROFS doesn't support multiref(dedup),
-		 * so here erroring out one multiref page.
-		 */
-		if (pages[pagenr]) {
-			DBG_BUGON(1);
-			SetPageError(pages[pagenr]);
-			z_erofs_onlinepage_endio(pages[pagenr]);
-			err = -EIO;
-		}
 		pages[pagenr] = page;
 	}
 	sparsemem_pages = i;
@@ -899,6 +889,7 @@ repeat:
 	overlapped = false;
 	compressed_pages = grp->compressed_pages;
 
+	err = 0;
 	for (i = 0; i < clusterpages; ++i) {
 		unsigned pagenr;
 
@@ -924,12 +915,7 @@ repeat:
 			pagenr = z_erofs_onlinepage_index(page);
 
 			DBG_BUGON(pagenr >= nr_pages);
-			if (pages[pagenr]) {
-				DBG_BUGON(1);
-				SetPageError(pages[pagenr]);
-				z_erofs_onlinepage_endio(pages[pagenr]);
-				err = -EIO;
-			}
+			DBG_BUGON(pages[pagenr]);
 			++sparsemem_pages;
 			pages[pagenr] = page;
 
