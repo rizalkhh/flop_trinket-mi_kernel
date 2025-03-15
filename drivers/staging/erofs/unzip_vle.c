@@ -1532,14 +1532,13 @@ int z_erofs_map_blocks_iter(struct inode *inode,
 	unsigned long long ofs, end;
 	struct z_erofs_vle_decompressed_index *di;
 	erofs_blk_t e_blkaddr, pcn;
-	unsigned lcn, logical_cluster_ofs, cluster_type;
+	unsigned lcn, logical_cluster_ofs;
 	u32 ofs_rem;
 	struct page *mpage = *mpage_ret;
 	void *kaddr;
 	bool initial;
 	const unsigned int clusterbits = EROFS_SB(inode->i_sb)->clusterbits;
 	const unsigned int clustersize = 1 << clusterbits;
-	int err = 0;
 
 	/* if both m_(l,p)len are 0, regularize l_lblk, l_lofs, etc... */
 	initial = !map->m_llen;
@@ -1593,9 +1592,7 @@ int z_erofs_map_blocks_iter(struct inode *inode,
 
 	end = (u64)(lcn + 1) * clustersize;
 
-	cluster_type = vle_cluster_type(di);
-
-	switch (cluster_type) {
+	switch (vle_cluster_type(di)) {
 	case Z_EROFS_VLE_CLUSTER_TYPE_PLAIN:
 		if (ofs_rem >= logical_cluster_ofs)
 			map->m_flags ^= EROFS_MAP_ZIPPED;
@@ -1611,24 +1608,13 @@ int z_erofs_map_blocks_iter(struct inode *inode,
 			break;
 		}
 
-		/* logical cluster number should be >= 1 */
-		if (unlikely(!lcn)) {
-			errln("invalid logical cluster 0 at nid %llu",
-				EROFS_V(inode)->nid);
-			err = -EIO;
-			goto unmap_out;
-		}
+		BUG_ON(!lcn);	/* logical cluster number >= 1 */
 		end = (lcn-- * clustersize) | logical_cluster_ofs;
 	case Z_EROFS_VLE_CLUSTER_TYPE_NONHEAD:
 		/* get the correspoinding first chunk */
 		ofs = vle_get_logical_extent_head(inode, mpage_ret,
 			&kaddr, lcn, &pcn, &map->m_flags);
 		mpage = *mpage_ret;
-	default:
-		errln("unknown cluster type %u at offset %llu of nid %llu",
-			cluster_type, ofs, EROFS_V(inode)->nid);
-		err = -EIO;
-		goto unmap_out;
 	}
 
 	map->m_la = ofs;
@@ -1644,9 +1630,6 @@ out:
 	debugln("%s, m_la %llu m_pa %llu m_llen %llu m_plen %llu m_flags 0%o",
 		__func__, map->m_la, map->m_pa,
 		map->m_llen, map->m_plen, map->m_flags);
-
-	/* aggressively BUG_ON iff CONFIG_EROFS_FS_DEBUG is on */
-	DBG_BUGON(err < 0);
-	return err;
+	return 0;
 }
 
