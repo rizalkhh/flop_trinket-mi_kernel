@@ -420,6 +420,7 @@ const struct xattr_handler __maybe_unused erofs_xattr_security_handler = {
 };
 #endif
 
+#ifdef CONFIG_EROFS_FS_XATTR
 const struct xattr_handler *erofs_xattr_handlers[] = {
 	&erofs_xattr_user_handler,
 #ifdef CONFIG_EROFS_FS_POSIX_ACL
@@ -432,6 +433,7 @@ const struct xattr_handler *erofs_xattr_handlers[] = {
 #endif
 	NULL,
 };
+#endif
 
 struct listxattr_iter {
 	struct xattr_iter it;
