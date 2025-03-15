@@ -622,12 +622,8 @@ repeat:
 
 	/* lucky, within the range of the current map_blocks */
 	if (offset + cur >= map->m_la &&
-		offset + cur < map->m_la + map->m_llen) {
-		/* didn't get a valid unzip work previously (very rare) */
-		if (!builder->work)
-			goto restart_now;
+		offset + cur < map->m_la + map->m_llen)
 		goto hitted;
-	}
 
 	/* go ahead the next map_blocks */
 	debugln("%s: [out-of-range] pos %llu", __func__, offset + cur);
@@ -641,7 +637,6 @@ repeat:
 	if (unlikely(err))
 		goto err_out;
 
-restart_now:
 	if (unlikely(!(map->m_flags & EROFS_MAP_MAPPED)))
 		goto hitted;
 
