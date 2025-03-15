@@ -885,7 +885,6 @@ repeat:
 	overlapped = false;
 	compressed_pages = grp->compressed_pages;
 
-	err = 0;
 	for (i = 0; i < clusterpages; ++i) {
 		unsigned pagenr;
 
@@ -895,38 +894,25 @@ repeat:
 		DBG_BUGON(page == NULL);
 		DBG_BUGON(page->mapping == NULL);
 
-		if (!z_erofs_is_stagingpage(page)) {
+		if (z_erofs_is_stagingpage(page))
+			continue;
 #ifdef EROFS_FS_HAS_MANAGED_CACHE
-			if (page->mapping == mngda) {
-				if (unlikely(!PageUptodate(page)))
-					err = -EIO;
-				continue;
-			}
+		if (page->mapping == mngda) {
+			DBG_BUGON(!PageUptodate(page));
+			continue;
+		}
 #endif
 
-			/*
-			 * only if non-head page can be selected
-			 * for inplace decompression
-			 */
-			pagenr = z_erofs_onlinepage_index(page);
+		/* only non-head page could be reused as a compressed page */
+		pagenr = z_erofs_onlinepage_index(page);
 
-			DBG_BUGON(pagenr >= nr_pages);
-			DBG_BUGON(pages[pagenr]);
-			++sparsemem_pages;
-			pages[pagenr] = page;
+		DBG_BUGON(pagenr >= nr_pages);
+		DBG_BUGON(pages[pagenr]);
+		++sparsemem_pages;
+		pages[pagenr] = page;
 
-			overlapped = true;
-		}
-
-		/* PG_error needs checking for inplaced and staging pages */
-		if (unlikely(PageError(page))) {
-			DBG_BUGON(PageUptodate(page));
-			err = -EIO;
-		}
+		overlapped = true;
 	}
-
-	if (unlikely(err))
-		goto out;
 
 	llen = (nr_pages << PAGE_SHIFT) - work->pageofs;
 
@@ -1096,8 +1082,6 @@ static inline bool recover_managed_page(struct z_erofs_vle_workgroup *grp,
 		return true;
 
 	lock_page(page);
-	ClearPageError(page);
-
 	if (unlikely(!PagePrivate(page))) {
 		set_page_private(page, (unsigned long)grp);
 		SetPagePrivate(page);
