@@ -218,7 +218,8 @@ extern int z_erofs_vle_plain_copy(struct page **compressed_pages,
 
 extern int z_erofs_vle_unzip_fast_percpu(struct page **compressed_pages,
 	unsigned clusterpages, struct page **pages,
-	unsigned int outlen, unsigned short pageofs);
+	unsigned outlen, unsigned short pageofs,
+	void (*endio)(struct page *));
 
 extern int z_erofs_vle_unzip_vmap(struct page **compressed_pages,
 	unsigned clusterpages, void *vaddr, unsigned llen,
