@@ -606,7 +606,7 @@ static int z_erofs_do_read_page(struct z_erofs_vle_frontend *fe,
 
 	enum z_erofs_page_type page_type;
 	unsigned cur, end, spiltted, index;
-	int err = 0;
+	int err;
 
 	/* register locked file pages as online pages in pack */
 	z_erofs_onlinepage_init(page);
@@ -633,11 +633,12 @@ repeat:
 	if (unlikely(err))
 		goto err_out;
 
+	/* deal with hole (FIXME! broken now) */
 	if (unlikely(!(map->m_flags & EROFS_MAP_MAPPED)))
 		goto hitted;
 
 	DBG_BUGON(map->m_plen != 1 << sbi->clusterbits);
-	DBG_BUGON(erofs_blkoff(map->m_pa));
+	BUG_ON(erofs_blkoff(map->m_pa));
 
 	err = z_erofs_vle_work_iter_begin(builder, sb, map, &fe->owned_head);
 	if (unlikely(err))
@@ -682,7 +683,7 @@ retry:
 
 		err = z_erofs_vle_work_add_page(builder,
 			newpage, Z_EROFS_PAGE_TYPE_EXCLUSIVE);
-		if (likely(!err))
+		if (!err)
 			goto retry;
 	}
 
@@ -693,10 +694,9 @@ retry:
 
 	/* FIXME! avoid the last relundant fixup & endio */
 	z_erofs_onlinepage_fixup(page, index, true);
-
-	/* bump up the number of spiltted parts of a page */
 	++spiltted;
-	/* also update nr_pages */
+
+	/* also update nr_pages and increase queued_pages */
 	work->nr_pages = max_t(pgoff_t, work->nr_pages, index + 1);
 next_part:
 	/* can be used for verification */
@@ -706,18 +706,16 @@ next_part:
 	if (end > 0)
 		goto repeat;
 
-out:
 	/* FIXME! avoid the last relundant fixup & endio */
 	z_erofs_onlinepage_endio(page);
 
 	debugln("%s, finish page: %pK spiltted: %u map->m_llen %llu",
 		__func__, page, spiltted, map->m_llen);
-	return err;
+	return 0;
 
-	/* if some error occurred while processing this page */
 err_out:
-	SetPageError(page);
-	goto out;
+	/* TODO: the missing error handing cases */
+	return err;
 }
 
 static void z_erofs_vle_unzip_kickoff(void *ptr, int bios)
