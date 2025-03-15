@@ -311,11 +311,7 @@ z_erofs_vle_work_lookup(struct super_block *sb,
 	/* if multiref is disabled, `primary' is always true */
 	primary = true;
 
-	if (work->pageofs != pageofs) {
-		DBG_BUGON(1);
-		erofs_workgroup_put(egrp);
-		return ERR_PTR(-EIO);
-	}
+	DBG_BUGON(work->pageofs != pageofs);
 
 	/*
 	 * lock must be taken first to avoid grp->next == NIL between
