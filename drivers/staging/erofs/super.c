@@ -326,8 +326,6 @@ static int erofs_read_super(struct super_block *sb,
 	snprintf(sbi->dev_name, PATH_MAX, "%s", dev_name);
 	sbi->dev_name[PATH_MAX - 1] = '\0';
 
-	erofs_register_super(sb);
-
 	/*
 	 * We already have a positive dentry, which was instantiated
 	 * by d_make_root. Just need to d_rehash it.
@@ -374,8 +372,6 @@ static void erofs_put_super(struct super_block *sb)
 
 	infoln("unmounted for %s", sbi->dev_name);
 	__putname(sbi->dev_name);
-
-	erofs_unregister_super(sb);
 
 	kfree(sbi);
 	sb->s_fs_info = NULL;
