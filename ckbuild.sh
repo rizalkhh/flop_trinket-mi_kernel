@@ -131,7 +131,11 @@ TEST_CHANNEL=1
 LOG_UPLOAD=1
 
 # Pick aosp, proton, rm69, lolz, slim, custom
-CLANG_TYPE="aosp"
+if [[ -z "$CLANG_TYPE" ]]; then
+    CLANG_TYPE="aosp"
+else
+    echo -e "\nINFO: Overriding default toolchain"
+fi
 
 ## Info message
 LINKER="ld.lld"
