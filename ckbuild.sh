@@ -18,6 +18,13 @@ RC_URL="https://github.com/kutemeikito/RastaMod69-Clang/releases/download/RastaM
 AK3_URL="https://github.com/Flopster101/AnyKernel3"
 AK3_BRANCH="floppy-reborn"
 
+# Custom toolchain directory
+if [[ -z "$CUST_DIR" ]]; then
+    CUST_DIR="$WP/custom-toolchain"
+else
+    echo -e "\nINFO: Overriding custom toolchain path..."
+fi
+
 # Workspace
 if [[ -d /workspace ]]; then
     WP="/workspace"
@@ -123,7 +130,7 @@ TEST_CHANNEL=1
 # Upload build log
 LOG_UPLOAD=1
 
-# Pick aosp, proton, rm69, lolz, slim
+# Pick aosp, proton, rm69, lolz, slim, custom
 CLANG_TYPE="aosp"
 
 ## Info message
@@ -250,6 +257,18 @@ get_toolchain() {
                 fi
             fi
             ;;
+        custom)
+            toolchain_dir="$CUST_DIR"
+            if [[ ! -d "$toolchain_dir" ]]; then
+                echo -e "\nERROR: Custom toolchain not found! Aborting..."
+                echo -e "INFO: Please provide a toolchain at $CUST_DIR or select a different toolchain"
+                exit 1
+            fi
+            ;;
+        *)
+            echo -e "\nERROR: Unknown toolchain type: $toolchain_type"
+            exit 1
+            ;;
     esac
 
     if [[ "$toolchain_type" == "aosp" ]] || [[ "$toolchain_type" == "sdclang" ]]; then
@@ -304,6 +323,15 @@ prep_toolchain() {
             CCARM64_PREFIX="aarch64-linux-gnu-"
             CCARM_PREFIX="arm-linux-gnueabi-"
             echo "INFO: Toolchain: Lolz Clang"
+            ;;
+        custom)
+            toolchain_dir="$CUST_DIR"
+            CCARM64_PREFIX="aarch64-linux-gnu-"
+            echo -e "\nINFO: Using custom toolchain..."
+            ;;
+        *)
+            echo -e "\nERROR: Unknown toolchain type: $toolchain_type"
+            exit 1
             ;;
     esac
 
