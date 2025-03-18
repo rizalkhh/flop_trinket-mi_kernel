@@ -94,6 +94,7 @@ IS_RELEASE=0
 DO_TG=0
 DO_REGEN=0
 DO_OSHI=0
+DO_FLTO=0
 for arg in "$@"; do
     if [[ "$arg" == *m* ]]; then
         echo "INFO: menuconfig enabled"
@@ -122,6 +123,11 @@ for arg in "$@"; do
     if [[ "$arg" == *r* ]]; then
         echo "INFO: config regeneration mode"
         DO_REGEN=1
+    fi
+    if [[ "$arg" == *l* ]]; then
+        echo "INFO: Full-LTO enabled"
+        echo "WARNING: Full-LTO is VERY resource heavy and may take a long time to compile!"
+        DO_FLTO=1
     fi
 done
 
@@ -542,6 +548,11 @@ build() {
 
     if [[ "$VERSION_NOAUTO" == "1" ]]; then
         scripts/config --file "$KDIR/out/.config" --disable LOCALVERSION_AUTO
+    fi
+
+    if [[ "$DO_FLTO" == "1" ]]; then
+        scripts/config --file "$KDIR/out/.config" --enable CONFIG_LTO_CLANG
+        scripts/config --file "$KDIR/out/.config" --disable CONFIG_THINLTO
     fi
 
     ## Start the build
