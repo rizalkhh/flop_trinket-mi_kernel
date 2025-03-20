@@ -1859,14 +1859,6 @@ const char *cmd_set_prop_map[DSI_CMD_SET_MAX] = {
 	"qcom,mdss-dsi-post-mode-switch-on-command",
 	"qcom,mdss-dsi-qsync-on-commands",
 	"qcom,mdss-dsi-qsync-off-commands",
-	"qcom,mdss-dsi-hbm1-on-command",
-	"qcom,mdss-dsi-hbm2-on-command",
-	"qcom,mdss-dsi-hbm3-on-command",
-	"qcom,mdss-dsi-hbm-off-command",
-	"qcom,mdss-dsi-cabc-on-command",
-	"qcom,mdss-dsi-cabc_still-on-command",
-	"qcom,mdss-dsi-cabc_movie-on-command",
-	"qcom,mdss-dsi-cabc-off-command",
 };
 
 const char *cmd_set_state_map[DSI_CMD_SET_MAX] = {
@@ -1901,14 +1893,6 @@ const char *cmd_set_state_map[DSI_CMD_SET_MAX] = {
 	"qcom,mdss-dsi-post-mode-switch-on-command-state",
 	"qcom,mdss-dsi-qsync-on-commands-state",
 	"qcom,mdss-dsi-qsync-off-commands-state",
-	"qcom,mdss-dsi-hbm1-on-command-state",
-	"qcom,mdss-dsi-hbm2-on-command-state",
-	"qcom,mdss-dsi-hbm3-on-command-state",
-	"qcom,mdss-dsi-hbm-off-command-state",
-	"qcom,mdss-dsi-cabc-on-command-state",
-	"qcom,mdss-dsi-cabc_still-on-command-state",
-	"qcom,mdss-dsi-cabc_movie-on-command-state",
-	"qcom,mdss-dsi-cabc-off-command-state",
 };
 
 static int dsi_panel_get_cmd_pkt_count(const char *data, u32 length, u32 *cnt)
@@ -4608,9 +4592,9 @@ int dsi_panel_apply_hbm_mode(struct dsi_panel *panel)
 {
 	static const enum dsi_cmd_set_type type_map[] = {
 		DSI_CMD_SET_HBM_OFF,
-		DSI_CMD_SET_HBM_L1_ON,
-		DSI_CMD_SET_HBM_L2_ON,
-		DSI_CMD_SET_HBM_L3_ON,
+		DSI_CMD_SET_HBM1_ON,
+		DSI_CMD_SET_HBM2_ON,
+		DSI_CMD_SET_HBM3_ON,
 	};
 
 	enum dsi_cmd_set_type type;
