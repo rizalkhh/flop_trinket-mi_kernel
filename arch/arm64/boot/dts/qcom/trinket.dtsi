@@ -405,10 +405,10 @@
 				compatible = "android,fstab";
 				vendor {
 					compatble = "android,vendor";
-					dev = "/dev/block/platform/soc/4804000.ufshc/by-name/vendor";
+					dev = "/dev/block/platform/soc/4744000.sdhci/by-name/vendor";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,discard";
-					fsmgr_flags = "wait,avb";
+					fsmgr_flags = "wait";
 					status = "ok";
 				};
 			};
