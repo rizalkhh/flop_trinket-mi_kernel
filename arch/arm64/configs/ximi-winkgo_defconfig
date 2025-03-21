@@ -3087,7 +3087,7 @@ CONFIG_DVB_MPQ_SW=y
 # Supported MMC/SDIO adapters
 #
 # CONFIG_SMS_SDIO_DRV is not set
-# CONFIG_FM_INSIDE_LAN is not set
+CONFIG_FM_INSIDE_LAN=y
 # CONFIG_CYPRESS_FIRMWARE is not set
 
 #
