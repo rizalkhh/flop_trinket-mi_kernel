@@ -285,10 +285,6 @@ int inet6_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 {
 	struct sock *sk = sock->sk;
 	const struct proto *prot;
-	struct ipv6_pinfo *np = inet6_sk(sk);
-	__be32 v4addr = 0;
-	bool saved_ipv6only;
-	int addr_type = 0;
 	int err = 0;
 
 	/* IPV6_ADDRFORM can change sk->sk_prot under us. */
