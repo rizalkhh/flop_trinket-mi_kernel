@@ -74,6 +74,7 @@ DO_CLEAN=0
 DO_MENUCONFIG=0
 IS_RELEASE=0
 DO_TG=0
+DO_REGEN=0
 for arg in "$@"
 do
     if [[ "$arg" == *m* ]]; then
@@ -99,6 +100,10 @@ do
     if [[ "$arg" == *o* ]]; then
         echo -e "\nINFO: oshi.at argument passed, build will be uploaded to oshi.at"
         DO_OSHI=1
+    fi
+    if [[ "$arg" == *r* ]]; then
+        echo -e "\nINFO: config regeneration mode"
+        DO_REGEN=1
     fi
 done
 
@@ -374,6 +379,12 @@ build() {
 
     if [ $DO_MENUCONFIG = "1" ]; then
         make O=out menuconfig
+    fi
+
+    if [[ "$DO_REGEN" = "1" ]]; then
+        cp -f out/.config arch/arm64/configs/$DEFCONFIG
+        echo "INFO: Configuration regenerated. Check the changes!"
+        exit 0
     fi
 
     if [[ "$IS_RELEASE" == "1" ]]; then
