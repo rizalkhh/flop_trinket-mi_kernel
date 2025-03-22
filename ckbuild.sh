@@ -78,31 +78,31 @@ DO_REGEN=0
 for arg in "$@"
 do
     if [[ "$arg" == *m* ]]; then
-        echo -e "\nINFO: menuconfig argument passed, kernel configuration menu will be shown..."
+        echo "INFO: menuconfig enabled"
         DO_MENUCONFIG=1
     fi
     if [[ "$arg" == *k* ]]; then
-        echo -e "\nINFO: KernelSU argument passed, a KernelSU build will be made..."
+        echo "INFO: KernelSU enabled"
         DO_KSU=1
     fi
     if [[ "$arg" == *c* ]]; then
-        echo -e "\nINFO: clean argument passed, output directory will be wiped..."
+        echo "INFO: clean build enabled"
         DO_CLEAN=1
     fi
     if [[ "$arg" == *R* ]]; then
-        echo -e "\nINFO: Release argument passed, build marked as release"
+        echo "INFO: Release build enabled"
         IS_RELEASE=1
     fi
     if [[ "$arg" == *t* ]]; then
-        echo -e "\nINFO: Telegram argument passed, build will be uploaded to CI"
+        echo "INFO: Telegram upload enabled"
         DO_TG=1
     fi
     if [[ "$arg" == *o* ]]; then
-        echo -e "\nINFO: oshi.at argument passed, build will be uploaded to oshi.at"
+        echo "INFO: oshi.at upload enabled"
         DO_OSHI=1
     fi
     if [[ "$arg" == *r* ]]; then
-        echo -e "\nINFO: config regeneration mode"
+        echo "INFO: config regeneration mode"
         DO_REGEN=1
     fi
 done
@@ -115,7 +115,7 @@ fi
 if [[ "${IS_RELEASE}" = "1" ]]; then
     BUILD_TYPE="Release"
 else
-    echo -e "\nINFO: Build marked as testing"
+    echo "INFO: Build marked as testing"
     BUILD_TYPE="Testing"
 fi
 
@@ -178,8 +178,8 @@ install_deps_deb() {
     if grep -q "Ubuntu" /etc/os-release; then
         sudo apt install $UB_DEPLIST -y
     else
-        echo -e "INFO: Your distro is not Ubuntu, skipping dependencies installation..."
-        echo -e "INFO: Make sure you have these dependencies installed before proceeding: $UB_DEPLIST"
+        echo "INFO: Your distro is not Ubuntu, skipping dependencies installation..."
+        echo "INFO: Make sure you have these dependencies installed before proceeding: $UB_DEPLIST"
     fi
 }
 
@@ -187,21 +187,19 @@ get_toolchain() {
     # Snapdragon Clang
     if [[ $1 = "sdclang" ]]; then
         if ! [ -d "$SD_DIR" ]; then
-            echo -e "\nINFO: SD Clang not found! Cloning to $SD_DIR..."
+            echo "INFO: SD Clang not found! Cloning to $SD_DIR..."
             if ! git clone -q -b $SD_BRANCH --depth=1 $SD_REPO $SD_DIR; then
-                echo -e "\nERROR: Cloning failed! Aborting..."
+                echo "ERROR: Cloning failed! Aborting..."
                 exit 1
             fi
         fi
     fi
-
-    # AOSP Clang
     if [[ $1 = "aosp" ]]; then
         if ! [ -d "$AC_DIR" ]; then
             CURRENT_CLANG=$(curl $AOSP_REPO | grep -oE "clang-r[0-9a-f]+" | sort -u | tail -n1)
-            echo -e "\nINFO: AOSP Clang not found! Cloning to $AC_DIR..."
+            echo "INFO: AOSP Clang not found! Cloning to $AC_DIR..."
             if ! curl -LSsO "$AOSP_ARCHIVE/$CURRENT_CLANG.tar.gz"; then
-                echo -e "\nERROR: Cloning failed! Aborting..."
+                echo "ERROR: Cloning failed! Aborting..."
                 exit 1
             fi
             mkdir -p $AC_DIR && tar -xf ./*.tar.gz -C $AC_DIR && rm ./*.tar.gz && rm -rf clang
@@ -210,71 +208,55 @@ get_toolchain() {
             rm -rf $CURRENT_CLANG
         fi
     fi
-
-    # Proton Clang
     if [[ $1 = "proton" ]]; then
         if ! [ -d "$PC_DIR" ]; then
-            echo -e "\nINFO: Proton Clang not found! Cloning to $PC_DIR..."
+            echo "INFO: Proton Clang not found! Cloning to $PC_DIR..."
             if ! git clone -q --depth=1 $PC_REPO $PC_DIR; then
-                echo -e "\nERROR: Cloning failed! Aborting..."
+                echo "ERROR: Cloning failed! Aborting..."
                 exit 1
             fi
         fi
     fi
-
-    # RastaMod69 Clang
     if [[ $1 = "rm69" ]]; then
         if ! [ -d "$RC_DIR" ]; then
-            echo -e "\nINFO: RastaMod69 Clang not found! Cloning to $RC_DIR..."
-            
-            # Download and extract RastaMod69 Clang
+            echo "INFO: RastaMod69 Clang not found! Cloning to $RC_DIR..."
             wget -q --show-progress $RC_URL -O "$WP/RastaMod69-clang.tar.gz"
             if [ $? -ne 0 ]; then
-                echo -e "\nERROR: Download failed! Aborting..."
+                echo "ERROR: Download failed! Aborting..."
                 rm -f "$WP/RastaMod69-clang.tar.gz"
                 exit 1
             fi
-            
             rm -rf clang && mkdir -p "$RC_DIR" && tar -xf "$WP/RastaMod69-clang.tar.gz" -C "$RC_DIR"
             if [ $? -ne 0 ]; then
-                echo -e "\nERROR: Extraction failed! Aborting..."
+                echo "ERROR: Extraction failed! Aborting..."
                 rm -f "$WP/RastaMod69-clang.tar.gz"
                 exit 1
             fi
-            
-            # Clean up the temporary file
             rm -f "$WP/RastaMod69-clang.tar.gz"
-            
-            echo -e "\nINFO: RastaMod69 Clang successfully cloned to $RC_DIR"
+            echo "INFO: RastaMod69 Clang successfully cloned to $RC_DIR"
         fi
     fi
-
-
-    # Lolz Clang
     if [[ $1 = "lolz" ]]; then
         if ! [ -d "$LZ_DIR" ]; then
-            echo -e "\nINFO: Lolz Clang not found! Cloning to $LZ_DIR..."
+            echo "INFO: Lolz Clang not found! Cloning to $LZ_DIR..."
             if ! git clone -q --depth=1 $LZ_REPO $LZ_DIR; then
-                echo -e "\nERROR: Cloning failed! Aborting..."
+                echo "ERROR: Cloning failed! Aborting..."
                 exit 1
             fi
         fi
     fi
-
-    # Clone gcc binutils if needed
     if [[ $1 = "aosp" ]] || [[ $1 = "sdclang" ]]; then
         if ! [ -d "$GCC_DIR" ]; then
-            echo -e "\nINFO: GCC not found! Cloning to $GCC_DIR..."
+            echo "INFO: GCC not found! Cloning to $GCC_DIR..."
             if ! git clone -q -b lineage-19.1 --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 $GCC_DIR; then
-                echo -e "\nERROR: Cloning failed! Aborting..."
+                echo "ERROR: Cloning failed! Aborting..."
                 exit 1
             fi
         fi
-
         if ! [ -d "$GCC64_DIR" ]; then
-            echo -e "\nINFO: GCC64 not found! Cloning to $GCC64_DIR..."
+            echo "INFO: GCC64 not found! Cloning to $GCC64_DIR..."
             if ! git clone -q -b lineage-19.1 --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 $GCC64_DIR; then
-                echo -e "\nERROR: Cloning failed! Aborting..."
+                echo "ERROR: Cloning failed! Aborting..."
                 exit 1
             fi
         fi
@@ -286,27 +268,27 @@ prep_toolchain() {
         CLANG_DIR="$AC_DIR"
         CCARM64_PREFIX=aarch64-linux-android-
         CCARM_PREFIX=arm-linux-androideabi-
-        echo -e "\nINFO: Using AOSP Clang..."
+        echo "INFO: Toolchain: AOSP Clang"
     elif [[ $1 = "sdclang" ]]; then
         CLANG_DIR="$SD_DIR/compiler"
         CCARM64_PREFIX=aarch64-linux-android-
         CCARM_PREFIX=arm-linux-androideabi-
-        echo -e "\nINFO: Using Snapdragon Clang..."
+        echo "INFO: Toolchain: Snapdragon Clang"
     elif [[ $1 = "proton" ]]; then
         CLANG_DIR="$PC_DIR"
         CCARM64_PREFIX=aarch64-linux-gnu-
         CCARM_PREFIX=arm-linux-gnueabi-
-        echo -e "\nINFO: Using Proton Clang..."
+        echo "INFO: Toolchain: Proton Clang"
     elif [[ $1 = "rm69" ]]; then
         CLANG_DIR="$RC_DIR"
         CCARM64_PREFIX=aarch64-linux-gnu-
         CCARM_PREFIX=arm-linux-gnueabi-
-        echo -e "\nINFO: Using RastaMod69 Clang..."
+        echo "INFO: Toolchain: RastaMod69 Clang"
     elif [[ $1 = "lolz" ]]; then
         CLANG_DIR="$LZ_DIR"
         CCARM64_PREFIX=aarch64-linux-gnu-
         CCARM_PREFIX=arm-linux-gnueabi-
-        echo -e "\nINFO: Using Lolz Clang..."
+        echo "INFO: Toolchain: Lolz Clang"
     fi
 
     ## Set PATH according to toolchain
@@ -352,17 +334,17 @@ tgs() {
 prep_build() {
     ## Prepare ccache
     if [ "$USE_CCACHE" = "1" ]; then
-        echo -e "\nINFO: Using ccache\n"
+        echo "INFO: ccache enabled"
         if [ "$IS_GP" = "1" ]; then
             export CCACHE_DIR=$WP/.ccache
             ccache -M 10G
         else
-            echo -e "INFO: Environment is not Gitpod, please make sure you setup your own ccache configuration!\n"
+            echo "WARNING: Environment is not Gitpod, please make sure you setup your own ccache configuration!"
         fi
     fi
 
     # Show compiler information
-    echo -e "\nINFO: Compiler information: $KBUILD_COMPILER_STRING\n"
+    echo -e "INFO: Compiler: $KBUILD_COMPILER_STRING\n"
 }
 
 build() {
