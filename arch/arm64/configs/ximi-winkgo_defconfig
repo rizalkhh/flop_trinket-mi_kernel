@@ -5158,6 +5158,15 @@ CONFIG_SENSORS_SSC=y
 CONFIG_FSTABDT_DISABLE=y
 
 #
+# KernelSU
+#
+# CONFIG_KSU is not set
+
+#
+# KernelSU - SUSFS
+#
+
+#
 # Firmware Drivers
 #
 CONFIG_ARM_PSCI_FW=y
