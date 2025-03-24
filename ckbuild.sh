@@ -63,7 +63,7 @@ OUT_DTBO="out/arch/arm64/boot/dtbo.img"
 ## Customizable vars
 
 # FloppyKernel version
-CK_VER="v1.0rc"
+FK_VER="v1.0b"
 
 # Toggles
 USE_CCACHE="1"
@@ -157,11 +157,11 @@ else
     CK_TYPE="Vanilla"
     CK_TYPE_SHORT="V"
 fi
-ZIP_PATH="$WP/FloppyKernel_$CK_VER-$CK_TYPE-ginkgo-$DATE.zip"
+ZIP_PATH="$WP/Floppy_$FK_VER-$CK_TYPE-ginkgo-$DATE.zip"
 
 echo -e "\nINFO: Build info:
 - KernelSU: $( [ "$DO_KSU" -eq 1 ] && echo Yes || echo No )
-- FloppyKernel version: $CK_VER
+- Floppy version: $FK_VER
 - Linux version: $LINUX_VER
 - Defconfig: $DEFCONFIG
 - Build date: $DATE
@@ -371,10 +371,10 @@ build() {
     fi
 
     if [[ "$IS_RELEASE" == "1" ]]; then
-        VERSION_STR="\"-Floppy-$CK_VER-$CK_TYPE_SHORT/release\""
+        VERSION_STR="\"-Floppy-$FK_VER-$CK_TYPE_SHORT/release\""
         VERSION_NOAUTO="1"
     else
-        VERSION_STR="\"-Floppy-$CK_VER-$CK_TYPE_SHORT/\""
+        VERSION_STR="\"-Floppy-$FK_VER-$CK_TYPE_SHORT/\""
     fi
 
     scripts/config --file "$KDIR/out/.config" --set-val LOCALVERSION "$VERSION_STR"
