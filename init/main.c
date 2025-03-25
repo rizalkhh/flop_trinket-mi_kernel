@@ -138,7 +138,26 @@ static char *ramdisk_execute_command;
 
 /* Workarounds */
 static bool legacy_timestamp_source = false;
- 
+
+static bool uname_bpf_spoof = false;
+
+static int __init set_uname_bpf_spoof(char *val)
+{
+	int tmp = uname_bpf_spoof;
+
+	if (get_option(&val, &tmp)) {
+		uname_bpf_spoof = tmp != 0;
+	}
+
+	return 0;
+}
+__setup("uname_bpf_spoof=", set_uname_bpf_spoof);
+
+bool is_bpf_spoof_enabled(void)
+{
+	return uname_bpf_spoof;
+}
+
 static int __init set_timestamp_source(char *val)
 {
 	int tmp = legacy_timestamp_source;
@@ -654,6 +673,8 @@ asmlinkage __visible void __init start_kernel(void)
 		init_protection ? "enabled" : "disabled");
 	pr_info("Workaround: legacy_timestamp_source=%s\n",
 			legacy_timestamp_source ? "enabled" : "disabled");
+	pr_info("Workaround: uname_bpf_spoof=%s\n",
+			uname_bpf_spoof ? "enabled" : "disabled");
 
 	/*
 	 * These use large bootmem allocations and must precede
