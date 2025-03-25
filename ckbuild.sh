@@ -14,6 +14,7 @@ SD_BRANCH="14"
 PC_REPO="https://github.com/kdrag0n/proton-clang"
 LZ_REPO="https://gitlab.com/Jprimero15/lolz_clang.git"
 RC_URL="https://github.com/kutemeikito/RastaMod69-Clang/releases/download/RastaMod69-Clang-20.0.0-release/RastaMod69-Clang-20.0.0.tar.gz"
+GC_REPO="https://api.github.com/repos/greenforce-project/greenforce_clang/releases/latest"
 # AnyKernel3
 AK3_URL="https://github.com/Flopster101/AnyKernel3"
 AK3_BRANCH="floppy-reborn"
@@ -64,6 +65,7 @@ LZ_DIR="$WP/lolzclang"
 GCC_DIR="$WP/gcc"
 GCC64_DIR="$WP/gcc64"
 AK3_DIR="$WP/AnyKernel3"
+GC_DIR="$WP/greenforceclang"
 KDIR="$(readlink -f .)"
 OUT_IMAGE="out/arch/arm64/boot/Image.gz-dtb"
 OUT_DTBO="out/arch/arm64/boot/dtbo.img"
@@ -130,7 +132,7 @@ TEST_CHANNEL=1
 # Upload build log
 LOG_UPLOAD=1
 
-# Pick aosp, proton, rm69, lolz, slim, custom
+# Pick aosp, proton, rm69, lolz, slim, greenforce, custom
 if [[ -z "$CLANG_TYPE" ]]; then
     CLANG_TYPE="aosp"
 else
@@ -261,6 +263,24 @@ get_toolchain() {
                 fi
             fi
             ;;
+        greenforce)
+            toolchain_dir="$GC_DIR"
+            if [[ ! -d "$toolchain_dir" ]]; then
+                echo -e "\nINFO: Greenforce Clang not found! Cloning to $toolchain_dir..."
+                LATEST_RELEASE=$(curl -s $GC_REPO | grep "browser_download_url" | grep ".tar.gz" | cut -d '"' -f 4)
+                if [[ -z "$LATEST_RELEASE" ]]; then
+                    echo "ERROR: Failed to fetch the latest Greenforce Clang release! Aborting..."
+                    exit 1
+                fi
+                if ! wget -q --show-progress -O "$WP/greenforce-clang.tar.gz" "$LATEST_RELEASE"; then
+                    echo "ERROR: Download failed! Aborting..."
+                    exit 1
+                fi
+                mkdir -p "$toolchain_dir"
+                tar -xf "$WP/greenforce-clang.tar.gz" -C "$toolchain_dir"
+                rm "$WP/greenforce-clang.tar.gz"
+            fi
+            ;;
         custom)
             toolchain_dir="$CUST_DIR"
             if [[ ! -d "$toolchain_dir" ]]; then
@@ -327,6 +347,11 @@ prep_toolchain() {
             CCARM64_PREFIX="aarch64-linux-gnu-"
             CCARM_PREFIX="arm-linux-gnueabi-"
             echo "INFO: Toolchain: Lolz Clang"
+            ;;
+        greenforce)
+            toolchain_dir="$GC_DIR"
+            CCARM64_PREFIX="aarch64-linux-gnu-"
+            echo "INFO: Toolchain: Greenforce Clang"
             ;;
         custom)
             toolchain_dir="$CUST_DIR"
