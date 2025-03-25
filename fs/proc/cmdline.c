@@ -13,17 +13,15 @@ extern int susfs_spoof_cmdline_or_bootconfig(struct seq_file *m);
 
 static char proc_command_line[COMMAND_LINE_SIZE];
 
+static char proc_command_line[COMMAND_LINE_SIZE];
+
 #ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
 #define INITRAMFS_STR_FIND "skip_initramf"
 #define INITRAMFS_STR_REPLACE "want_initramf"
 #define INITRAMFS_STR_LEN (sizeof(INITRAMFS_STR_FIND) - 1)
 
-static char proc_command_line[COMMAND_LINE_SIZE];
-
 static void proc_command_line_init(void) {
 	char *offset_addr;
-
-	strcpy(proc_command_line, saved_command_line);
 
 	offset_addr = strstr(proc_command_line, INITRAMFS_STR_FIND);
 	if (!offset_addr)
@@ -43,7 +41,6 @@ static int cmdline_proc_show(struct seq_file *m, void *v)
 #endif
 	seq_puts(m, proc_command_line);
 	seq_putc(m, '\n');
-#endif
 	return 0;
 }
 
@@ -61,6 +58,8 @@ static const struct file_operations cmdline_proc_fops = {
 
 static int __init proc_cmdline_init(void)
 {
+	strcpy(proc_command_line, saved_command_line);
+
 #ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
 	if (!strstr(saved_command_line, "fstabdt_keep"))
 		proc_command_line_init();
