@@ -147,9 +147,6 @@ static int __init set_timestamp_source(char *val)
 		legacy_timestamp_source = tmp != 0;
 	}
 
-	pr_info("Workaround: legacy_timestamp_source=%s\n",
-			legacy_timestamp_source ? "enabled" : "disabled");
-
 	return 0;
 }
 __setup("legacy_timestamp_source=", set_timestamp_source);
@@ -169,9 +166,6 @@ static int __init set_init_protection(char *val)
 	if (get_option(&val, &tmp)) {
 		init_protection = tmp != 0;
 	}
-
-	pr_info("Hack: init_protection=%s\n",
-			init_protection ? "enabled" : "disabled");
 
 	return 0;
 }
@@ -655,6 +649,11 @@ asmlinkage __visible void __init start_kernel(void)
 	if (!IS_ERR_OR_NULL(after_dashes))
 		parse_args("Setting init args", after_dashes, NULL, 0, -1, -1,
 			   NULL, set_init_arg);
+
+	pr_info("Hack: init_protection=%s\n",
+		init_protection ? "enabled" : "disabled");
+	pr_info("Workaround: legacy_timestamp_source=%s\n",
+			legacy_timestamp_source ? "enabled" : "disabled");
 
 	/*
 	 * These use large bootmem allocations and must precede
