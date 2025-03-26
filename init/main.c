@@ -195,6 +195,25 @@ bool init_protection_enabled(void)
 	return init_protection;
 }
 
+static bool warm_reboot = false;
+
+static int __init set_warm_reboot(char *val)
+{
+	int tmp = warm_reboot;
+
+	if (get_option(&val, &tmp)) {
+		warm_reboot = tmp != 0;
+	}
+
+	return 0;
+}
+__setup("warm_reboot=", set_warm_reboot);
+
+bool always_warm_reboot(void)
+{
+	return warm_reboot;
+}
+
 /*
  * Used to generate warnings if static_key manipulation functions are used
  * before jump_label_init is called.
@@ -671,6 +690,8 @@ asmlinkage __visible void __init start_kernel(void)
 
 	pr_info("Hack: init_protection=%s\n",
 		init_protection ? "enabled" : "disabled");
+	pr_info("Hack: warm_reboot=%s\n",
+		warm_reboot ? "enabled" : "disabled");
 	pr_info("Workaround: legacy_timestamp_source=%s\n",
 			legacy_timestamp_source ? "enabled" : "disabled");
 	pr_info("Workaround: uname_bpf_spoof=%s\n",

@@ -28,6 +28,7 @@
 #include <linux/of_address.h>
 #include <linux/syscore_ops.h>
 #include <linux/crash_dump.h>
+#include <linux/workarounds.h>
 
 #include <asm/cacheflush.h>
 #include <asm/system_misc.h>
@@ -297,7 +298,7 @@ static void msm_restart_prepare(const char *cmd)
 
 	/* Hard reset the PMIC unless memory contents must be maintained. */
 #ifdef CONFIG_MACH_XIAOMI_C3J
-	if (force_warm_reboot || need_warm_reset || in_panic) {
+	if (force_warm_reboot || need_warm_reset || in_panic || always_warm_reboot()) {
 		pr_info("a warm reset of the system with in_panic %d or need_warm_reset %d\n",
 			in_panic, need_warm_reset);
 		qpnp_pon_system_pwr_off(PON_POWER_OFF_WARM_RESET);
@@ -305,7 +306,7 @@ static void msm_restart_prepare(const char *cmd)
 		qpnp_pon_system_pwr_off(PON_POWER_OFF_HARD_RESET);
 	}
 #else
-	if (force_warm_reboot || need_warm_reset)
+	if (force_warm_reboot || need_warm_reset || always_warm_reboot())
 		qpnp_pon_system_pwr_off(PON_POWER_OFF_WARM_RESET);
 	else
 		qpnp_pon_system_pwr_off(PON_POWER_OFF_HARD_RESET);
