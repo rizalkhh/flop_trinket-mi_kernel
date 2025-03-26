@@ -2,3 +2,4 @@
  
 bool is_legacy_timestamp(void);
 bool is_bpf_spoof_enabled(void);
+bool always_warm_reboot(void);
