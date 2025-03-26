@@ -295,7 +295,7 @@ get_toolchain() {
             ;;
     esac
 
-    if [[ "$toolchain_type" == "aosp" ]] || [[ "$toolchain_type" == "sdclang" ]]; then
+    if [[ "$toolchain_type" == "aosp" ]] || [[ "$toolchain_type" == "sdclang" ]] || [[ "$toolchain_type" == "greenforce" ]]; then
         if [[ ! -d "$GCC_DIR" ]]; then
             echo "INFO: GCC not found! Cloning to $GCC_DIR..."
             if ! git clone -q -b lineage-19.1 --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 "$GCC_DIR"; then
@@ -350,7 +350,8 @@ prep_toolchain() {
             ;;
         greenforce)
             toolchain_dir="$GC_DIR"
-            CCARM64_PREFIX="aarch64-linux-gnu-"
+            CCARM64_PREFIX="aarch64-linux-android-"
+            CCARM_PREFIX="arm-linux-androideabi-"
             echo "INFO: Toolchain: Greenforce Clang"
             ;;
         custom)
@@ -365,7 +366,7 @@ prep_toolchain() {
     esac
 
     ## Set PATH according to toolchain
-    if [[ "$toolchain_type" == "sdclang" ]] || [[ "$toolchain_type" == "aosp" ]] ; then
+    if [[ "$toolchain_type" == "sdclang" ]] || [[ "$toolchain_type" == "aosp" ]] || [[ "$toolchain_type" == "greenforce" ]] ; then
         export PATH="${toolchain_dir}/bin:${GCC64_DIR}/bin:${GCC_DIR}/bin:/usr/bin:${PATH}"
     else
         export PATH="${toolchain_dir}/bin:${PATH}"
