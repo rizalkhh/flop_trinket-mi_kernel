@@ -27,6 +27,7 @@
 #include <linux/of_address.h>
 #include <linux/syscore_ops.h>
 #include <linux/crash_dump.h>
+#include <linux/workarounds.h>
 
 #include <asm/cacheflush.h>
 #include <asm/system_misc.h>
@@ -319,7 +320,7 @@ static void msm_restart_prepare(const char *cmd)
 		pr_info("Forcing a warm reset of the system\n");
 
 	/* Hard reset the PMIC unless memory contents must be maintained. */
-	if (in_panic || force_warm_reboot || need_warm_reset)
+	if (in_panic || force_warm_reboot || need_warm_reset || always_warm_reboot())
 		qpnp_pon_system_pwr_off(PON_POWER_OFF_WARM_RESET);
 	else
 		qpnp_pon_system_pwr_off(PON_POWER_OFF_HARD_RESET);
