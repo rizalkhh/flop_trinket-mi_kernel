@@ -320,8 +320,8 @@ prep_toolchain() {
     case "$toolchain_type" in
         aosp)
             toolchain_dir="$AC_DIR"
-            CCARM64_PREFIX="aarch64-linux-gnu-"
-            CCARM_PREFIX="arm-linux-gnueabi-"
+            CCARM64_PREFIX="aarch64-linux-android-"
+            CCARM_PREFIX="arm-linux-androideabi-"
             echo -e "\nINFO: Using AOSP Clang..."
             ;;
         sdclang)
