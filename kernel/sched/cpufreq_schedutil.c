@@ -408,7 +408,7 @@ static void sugov_walt_adjust(struct sugov_cpu *sg_cpu, unsigned long *util,
 	if (is_rtg_boost)
 		*util = max(*util, sg_policy->rtg_boost_util);
 
-	is_hiload = (cpu_util >= mult_frac(sg_policy->avg_cap,
+	is_hiload = (cpu_util >= mult_frac(cap_cur,
 					   sg_policy->tunables->hispeed_load,
 					   100));
 
