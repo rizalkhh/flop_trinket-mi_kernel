@@ -192,6 +192,7 @@ install_deps_deb() {
     # Dependencies
     UB_DEPLIST="lz4 brotli flex bc cpio kmod ccache zip libtinfo5 python3"
     if grep -q "Ubuntu" /etc/os-release; then
+        sudo apt update -qq
         sudo apt install $UB_DEPLIST -y
     else
         echo "INFO: Your distro is not Ubuntu, skipping dependencies installation..."
