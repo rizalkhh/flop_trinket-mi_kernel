@@ -1183,11 +1183,8 @@ static int sde_connector_atomic_set_property(struct drm_connector *connector,
 	switch (idx) {
 	case CONNECTOR_PROP_LP:
 #ifdef CONFIG_MACH_XIAOMI_F9S
-		if (connector->dev) {
+		if (connector->dev)
 			connector->dev->sde_power_mode = val;
-			pr_info("sde connector set power mode = %s\n",
-				sde_mode_dpms_str[val]);
-		}
 		break;
 #endif
 #ifdef CONFIG_MACH_XIAOMI_C3J
