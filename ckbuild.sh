@@ -16,6 +16,7 @@ LZ_REPO="https://gitlab.com/Jprimero15/lolz_clang.git"
 RC_URL="https://github.com/kutemeikito/RastaMod69-Clang/releases/download/RastaMod69-Clang-20.0.0-release/RastaMod69-Clang-20.0.0.tar.gz"
 GC_REPO="https://api.github.com/repos/greenforce-project/greenforce_clang/releases/latest"
 ZC_REPO="https://raw.githubusercontent.com/ZyCromerZ/Clang/refs/heads/main/Clang-main-link.txt"
+RV_REPO="https://api.github.com/repos/Rv-Project/RvClang/releases/latest"
 GCC_REPO="https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9"
 GCC64_REPO="https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9"
 # AnyKernel3
@@ -71,6 +72,7 @@ GCC64_DIR="$WP/gcc64"
 AK3_DIR="$WP/AnyKernel3"
 GC_DIR="$WP/greenforceclang"
 ZC_DIR="$WP/zycclang"
+RV_DIR="$WP/rvclang"
 KDIR="$(readlink -f .)"
 USE_GCC_BINUTILS="0"
 OUT_IMAGE="out/arch/arm64/boot/Image.gz-dtb"
@@ -138,7 +140,7 @@ TEST_CHANNEL=1
 # Upload build log
 LOG_UPLOAD=1
 
-# Pick aosp, proton, rm69, lolz, slim, greenforce, zyc, custom
+# Pick aosp, proton, rm69, lolz, slim, greenforce, zyc, rv, custom
 if [[ -z "$CLANG_TYPE" ]]; then
     CLANG_TYPE="aosp"
 else
@@ -343,6 +345,33 @@ get_toolchain() {
                 rm "$WP/zyc-clang.tar.gz"
             fi
             ;;
+        rv)
+            toolchain_dir="$RV_DIR"
+            if [[ ! -d "$toolchain_dir" ]]; then
+            echo -e "\nINFO: RvClang not found! Fetching the latest version..."
+            LATEST_RELEASE=$(curl -s "$RV_REPO" | grep "browser_download_url" | grep ".tar.gz" | cut -d '"' -f 4)
+            if [[ -z "$LATEST_RELEASE" ]]; then
+                echo "ERROR: Failed to fetch the latest RvClang release! Aborting..."
+                exit 1
+            fi
+            if ! wget -q --show-progress -O "$WP/rvclang.tar.gz" "$LATEST_RELEASE"; then
+                echo "ERROR: Download failed! Aborting..."
+                exit 1
+            fi
+            mkdir -p "$toolchain_dir"
+            if ! tar -xf "$WP/rvclang.tar.gz" -C "$toolchain_dir"; then
+                echo "ERROR: Extraction failed! Aborting..."
+                rm -f "$WP/rvclang.tar.gz"
+                exit 1
+            fi
+            rm "$WP/rvclang.tar.gz"
+            # Move contents of the inner "RvClang" folder to $RV_DIR
+            if [[ -d "$toolchain_dir/RvClang" ]]; then
+                mv "$toolchain_dir/RvClang"/* "$toolchain_dir/"
+                rmdir "$toolchain_dir/RvClang"
+            fi
+            fi
+            ;;
         *)
             echo -e "\nERROR: Unknown toolchain type: $toolchain_type"
             exit 1
@@ -403,6 +432,10 @@ prep_toolchain() {
         custom)
             toolchain_dir="$CUST_DIR"
             echo "INFO: Toolchain: Custom toolchain"
+            ;;
+        rv)
+            toolchain_dir="$RV_DIR"
+            echo "INFO: Toolchain: RvClang"
             ;;
         *)
             echo -e "\nERROR: Unknown toolchain type: $toolchain_type"
