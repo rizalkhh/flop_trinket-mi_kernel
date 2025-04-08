@@ -15,6 +15,7 @@ PC_REPO="https://github.com/kdrag0n/proton-clang"
 LZ_REPO="https://gitlab.com/Jprimero15/lolz_clang.git"
 RC_URL="https://github.com/kutemeikito/RastaMod69-Clang/releases/download/RastaMod69-Clang-20.0.0-release/RastaMod69-Clang-20.0.0.tar.gz"
 GC_REPO="https://api.github.com/repos/greenforce-project/greenforce_clang/releases/latest"
+ZC_REPO="https://raw.githubusercontent.com/ZyCromerZ/Clang/refs/heads/main/Clang-main-link.txt"
 # AnyKernel3
 AK3_URL="https://github.com/Flopster101/AnyKernel3"
 AK3_BRANCH="floppy-reborn"
@@ -66,6 +67,7 @@ GCC_DIR="$WP/gcc"
 GCC64_DIR="$WP/gcc64"
 AK3_DIR="$WP/AnyKernel3"
 GC_DIR="$WP/greenforceclang"
+ZC_DIR="$WP/zycclang"
 KDIR="$(readlink -f .)"
 OUT_IMAGE="out/arch/arm64/boot/Image.gz-dtb"
 OUT_DTBO="out/arch/arm64/boot/dtbo.img"
@@ -132,7 +134,7 @@ TEST_CHANNEL=1
 # Upload build log
 LOG_UPLOAD=1
 
-# Pick aosp, proton, rm69, lolz, slim, greenforce, custom
+# Pick aosp, proton, rm69, lolz, slim, greenforce, zyc, custom
 if [[ -z "$CLANG_TYPE" ]]; then
     CLANG_TYPE="aosp"
 else
@@ -289,6 +291,24 @@ get_toolchain() {
                 exit 1
             fi
             ;;
+        zyc)
+            toolchain_dir="$ZC_DIR"
+            if [[ ! -d "$toolchain_dir" ]]; then
+            echo -e "\nINFO: ZyC Clang not found! Cloning to $toolchain_dir..."
+            LATEST_RELEASE=$(curl -s "$ZC_REPO" | head -n 1)
+            if [[ -z "$LATEST_RELEASE" ]]; then
+                echo "ERROR: Failed to fetch the latest ZyC Clang release! Aborting..."
+                exit 1
+            fi
+            if ! wget -q --show-progress -O "$WP/zyc-clang.tar.gz" "$LATEST_RELEASE"; then
+                echo "ERROR: Download failed! Aborting..."
+                exit 1
+            fi
+            mkdir -p "$toolchain_dir"
+            tar -xf "$WP/zyc-clang.tar.gz" -C "$toolchain_dir"
+            rm "$WP/zyc-clang.tar.gz"
+            fi
+            ;;
         *)
             echo -e "\nERROR: Unknown toolchain type: $toolchain_type"
             exit 1
@@ -353,6 +373,11 @@ prep_toolchain() {
             CCARM64_PREFIX="aarch64-linux-android-"
             CCARM_PREFIX="arm-linux-androideabi-"
             echo "INFO: Toolchain: Greenforce Clang"
+            ;;
+        zyc)
+            toolchain_dir="$ZC_DIR"
+            CCARM64_PREFIX="aarch64-linux-gnu-"
+            echo "INFO: Toolchain: ZyC Clang"
             ;;
         custom)
             toolchain_dir="$CUST_DIR"
