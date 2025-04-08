@@ -345,7 +345,7 @@ prep_toolchain() {
     case "$toolchain_type" in
         aosp)
             toolchain_dir="$AC_DIR"
-            echo -e "\nINFO: Using AOSP Clang..."
+            echo "INFO: Toolchain: AOSP Clang"
             ;;
         sdclang)
             toolchain_dir="$SD_DIR/compiler"
@@ -373,7 +373,7 @@ prep_toolchain() {
             ;;
         custom)
             toolchain_dir="$CUST_DIR"
-            echo -e "\nINFO: Using custom toolchain..."
+            echo "INFO: Toolchain: Custom toolchain"
             ;;
         *)
             echo -e "\nERROR: Unknown toolchain type: $toolchain_type"
