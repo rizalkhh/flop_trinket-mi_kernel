@@ -106,8 +106,8 @@ int xhci_handshake_check_state(struct xhci_hcd *xhci, void __iomem *ptr, u32 mas
 		if (result == done)
 			return 0;
 		udelay(1);
-		usec--;
-	} while (usec > 0);
+		timeout_us--;
+	} while (timeout_us > 0);
 	return -ETIMEDOUT;
 }
 
