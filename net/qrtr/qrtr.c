@@ -946,7 +946,7 @@ static void qrtr_fwd_ctrl_pkt(struct sk_buff *skb)
 		if (!qrtr_must_forward(src, node, cb->type))
 			continue;
 
-		skbn = skb_clone(skb, GFP_KERNEL);
+		skbn = pskb_copy(skb, GFP_KERNEL);
 		if (!skbn)
 			break;
 
