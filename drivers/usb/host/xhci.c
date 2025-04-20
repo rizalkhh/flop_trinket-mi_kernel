@@ -91,8 +91,7 @@ int xhci_handshake(void __iomem *ptr, u32 mask, u32 done, u64 timeout_us)
 	return ret;
 }
 
-int xhci_handshake_check_state(struct xhci_hcd *xhci,
-		void __iomem *ptr, u32 mask, u32 done, int usec)
+int xhci_handshake_check_state(struct xhci_hcd *xhci, void __iomem *ptr, u32 mask, u32 done, u64 timeout_us)
 {
 	u32	result;
 
