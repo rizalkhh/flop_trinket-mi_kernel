@@ -599,7 +599,7 @@ int __mmc_switch(struct mmc_card *card, u8 set, u8 index, u8 value,
 	 * to a R1 response instead of a R1B.
 	 */
 	if (host->max_busy_timeout &&
-	    (timeout_ms > host->max_busy_timeout))
+	    (host->max_busy_timeout))
 		use_r1b_resp = false;
 
 	mmc_prepare_switch(&cmd, index, value, set, timeout_ms,
