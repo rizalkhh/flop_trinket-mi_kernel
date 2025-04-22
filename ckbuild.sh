@@ -106,11 +106,6 @@ do
 done
 
 DEFCONFIG=$DEFAULT_DEFCONFIG
-if [ $DO_KSU = "1" ]; then
-    DEFCONFIG="ximi-winkgo-ksu_defconfig"
-else
-    DEFCONFIG="ximi-winkgo_defconfig"
-fi
 
 if [[ "${IS_RELEASE}" = "1" ]]; then
     BUILD_TYPE="Release"
@@ -349,7 +344,7 @@ prep_build() {
 
 build() {
     mkdir -p out
-    make O=out ARCH=arm64 $DEFCONFIG 2>&1 | tee log.txt
+    make O=out ARCH=arm64 $DEFCONFIG $([[ "$DO_KSU" == "1" ]] && echo "ksu.config") 2>&1 | tee log.txt
 
     # Delete leftovers
     rm -f out/arch/arm64/boot/Image*
@@ -364,6 +359,10 @@ build() {
     fi
 
     if [[ "$DO_REGEN" = "1" ]]; then
+        if [[ "$DO_KSU" = "1" ]]; then
+             echo "ERROR: Can't regenerate with KSU argument"
+             exit 1
+        fi
         cp -f out/.config arch/arm64/configs/$DEFCONFIG
         echo "INFO: Configuration regenerated. Check the changes!"
         exit 0
