@@ -93,7 +93,7 @@ DO_MENUCONFIG=0
 IS_RELEASE=0
 DO_TG=0
 DO_REGEN=0
-DO_OSHI=0
+DO_BASHUP=0
 DO_FLTO=0
 for arg in "$@"; do
     if [[ "$arg" == *m* ]]; then
@@ -117,8 +117,8 @@ for arg in "$@"; do
         DO_TG=1
     fi
     if [[ "$arg" == *o* ]]; then
-        echo "INFO: oshi.at upload enabled"
-        DO_OSHI=1
+        echo "INFO: bashupload upload enabled"
+        DO_BASHUP=1
     fi
     if [[ "$arg" == *r* ]]; then
         echo "INFO: config regeneration mode"
@@ -601,8 +601,8 @@ post_build() {
         echo -e "\nINFO: Kernel compiled succesfully! Zipping up..."
     else
         echo -e "\nERROR: Kernel files not found! Compilation failed?"
-        echo -e "\nINFO: Uploading log to oshi.at\n"
-        curl -T log.txt oshi.at
+        echo -e "\nINFO: Uploading log to bashupload.com\n"
+        curl -T log.txt bashupload.com
         exit 1
     fi
 
@@ -640,9 +640,9 @@ post_build() {
 }
 
 upload() {
-    if [[ "$DO_OSHI" == "1" ]]; then
-    echo -e "\nINFO: Uploading to oshi.at...\n"
-    curl -T "$ZIP_PATH" oshi.at; echo
+    if [[ "$DO_BASHUP" == "1" ]]; then
+    echo -e "\nINFO: Uploading to bashupload.com...\n"
+    curl -T "$ZIP_PATH" bashupload.com; echo
     fi
 
     if [[ "$DO_TG" == "1" ]]; then
@@ -651,8 +651,8 @@ upload() {
             echo "INFO: Done!"
     fi
     if [[ "$LOG_UPLOAD" == "1" ]]; then
-        echo -e "\nINFO: Uploading log to oshi.at\n"
-        curl -T log.txt oshi.at
+        echo -e "\nINFO: Uploading log to bashupload.com\n"
+        curl -T log.txt bashupload.com
     fi
     # Delete any leftover zip files
     # rm -f "$WP/FloppyKernel*zip"
