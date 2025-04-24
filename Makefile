@@ -710,7 +710,7 @@ KBUILD_CFLAGS   += -O3
 ifeq ($(cc-name),clang)
 KBUILD_CFLAGS	+= -mcpu=cortex-a53 -mtune=cortex-a53
 
-ifeq ($(shell echo $(CONFIG_CC_VERSION_TEXT) | grep -qE 'Android|Neutron' && echo true || echo false),true)
+ifeq ($(shell $(CC) --version 2>/dev/null | head -n 1) | grep -qE 'Android|Neutron' && echo true || echo false),true)
 KBUILD_CFLAGS   += -mllvm -regalloc-enable-advisor=release
 endif
 
@@ -915,7 +915,7 @@ endif
 lto-clang-flags += -fvisibility=hidden
 
 #Enable MLGO for register allocation.
-ifeq ($(shell echo $(CONFIG_CC_VERSION_TEXT) | grep -qE 'Android|Neutron' && echo true || echo false),true)
+ifeq ($(shell $(CC) --version 2>/dev/null | head -n 1) | grep -qE 'Android|Neutron' && echo true || echo false),true)
 LDFLAGS += -mllvm -regalloc-enable-advisor=release
 endif
 
