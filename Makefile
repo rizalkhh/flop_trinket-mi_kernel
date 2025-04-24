@@ -893,7 +893,15 @@ endif
 
 ifdef CONFIG_LTO_CLANG
 ifdef CONFIG_THINLTO
-lto-clang-flags	:= -flto=thin -fsplit-lto-unit -funified-lto
+lto-clang-flags	:= -flto=thin -funified-lto -fno-split-lto-unit
+
+# Merge into single partition
+LDFLAGS += --lto-partitions=1
+
+# LLVM tunings
+LDFLAGS += -mllvm -import-hot-multiplier=2
+LDFLAGS += -mllvm -inline-threshold=1000
+LDFLAGS += -mllvm -import-instr-limit=10
 else
 lto-clang-flags	:= -flto
 endif
@@ -906,7 +914,9 @@ KBUILD_LDS_MODULE += $(srctree)/scripts/module-lto.lds
 # allow disabling only clang LTO where needed
 DISABLE_LTO_CLANG := -fno-lto
 export DISABLE_LTO_CLANG
+ifndef CONFIG_LTO_CLANG_THIN
 LDFLAGS		+= --plugin-opt=-import-instr-limit=5
+endif
 endif
 
 ifdef CONFIG_LTO
