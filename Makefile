@@ -817,7 +817,7 @@ KBUILD_CFLAGS += $(call cc-option,-fno-delete-null-pointer-checks,)
 KBUILD_CFLAGS += $(call cc-disable-warning, unused-but-set-variable)
 
 ifeq ($(ld-name),lld)
-LDFLAGS += -z norelro --lto-O3
+LDFLAGS += -z norelro
 endif
 
 KBUILD_CFLAGS += $(call cc-disable-warning, unused-const-variable)
