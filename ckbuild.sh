@@ -72,6 +72,11 @@ USE_GCC_BINUTILS="0"
 OUT_IMAGE="out/arch/arm64/boot/Image.gz-dtb"
 OUT_DTBO="out/arch/arm64/boot/dtbo.img"
 
+# Ensure the toolchains directory exists
+if [[ ! -d "$TC_DIR" ]]; then
+    mkdir -p "$TC_DIR"
+fi
+
 # Custom toolchain directory
 if [[ -z "$CUST_DIR" ]]; then
     CUST_DIR="$TC_DIR/custom-toolchain"
