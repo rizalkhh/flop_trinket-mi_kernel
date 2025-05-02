@@ -23,13 +23,6 @@ GCC64_REPO="https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64
 AK3_URL="https://github.com/Flopster101/AnyKernel3"
 AK3_BRANCH="floppy-reborn"
 
-# Custom toolchain directory
-if [[ -z "$CUST_DIR" ]]; then
-    CUST_DIR="$WP/custom-toolchain"
-else
-    echo -e "\nINFO: Overriding custom toolchain path..."
-fi
-
 # Workspace
 if [[ -d /workspace ]]; then
     WP="/workspace"
@@ -62,21 +55,29 @@ SECONDS=0 # builtin bash timer
 DATE="$(date '+%Y%m%d-%H%M')"
 BUILD_HOST="$USER@$(hostname)"
 # Paths
-SD_DIR="$WP/sdclang"
-AC_DIR="$WP/aospclang"
-PC_DIR="$WP/protonclang"
-RC_DIR="$WP/rm69clang"
-LZ_DIR="$WP/lolzclang"
-GCC_DIR="$WP/gcc"
-GCC64_DIR="$WP/gcc64"
+TC_DIR="$WP/toolchains"
+SD_DIR="$TC_DIR/sdclang"
+AC_DIR="$TC_DIR/aospclang"
+PC_DIR="$TC_DIR/protonclang"
+RC_DIR="$TC_DIR/rm69clang"
+LZ_DIR="$TC_DIR/lolzclang"
+GCC_DIR="$TC_DIR/gcc"
+GCC64_DIR="$TC_DIR/gcc64"
 AK3_DIR="$WP/AnyKernel3"
-GC_DIR="$WP/greenforceclang"
-ZC_DIR="$WP/zycclang"
-RV_DIR="$WP/rvclang"
+GC_DIR="$TC_DIR/greenforceclang"
+ZC_DIR="$TC_DIR/zycclang"
+RV_DIR="$TC_DIR/rvclang"
 KDIR="$(readlink -f .)"
 USE_GCC_BINUTILS="0"
 OUT_IMAGE="out/arch/arm64/boot/Image.gz-dtb"
 OUT_DTBO="out/arch/arm64/boot/dtbo.img"
+
+# Custom toolchain directory
+if [[ -z "$CUST_DIR" ]]; then
+    CUST_DIR="$TC_DIR/custom-toolchain"
+else
+    echo -e "\nINFO: Overriding custom toolchain path..."
+fi
 
 ## Customizable vars
 
