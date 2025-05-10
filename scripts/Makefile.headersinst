@@ -71,6 +71,15 @@ unwanted      := $(filter-out $(all-files),$(oldheaders))
 # Prefix unwanted with full paths to $(INSTALL_HDR_PATH)
 unwanted-file := $(addprefix $(installdir)/, $(unwanted))
 
+ifneq ($(filter techpack/%,$(obj)),)
+    ifeq ($(words $(subst /, ,$(dst))),2)
+        ifeq ($(firstword $(subst /, ,$(dst))),include)
+            unwanted      :=
+            unwanted-file :=
+        endif
+    endif
+endif
+
 printdir = $(patsubst $(INSTALL_HDR_PATH)/%/,%,$(dir $@))
 
 quiet_cmd_install = INSTALL $(printdir) ($(words $(all-files))\

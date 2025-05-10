@@ -1444,7 +1444,8 @@ headers_install: __headers
 	  $(error Headers not exportable for the $(SRCARCH) architecture))
 	$(Q)$(MAKE) $(hdr-inst)=include/uapi dst=include
 	$(Q)$(MAKE) $(hdr-inst)=arch/$(hdr-arch)/include/uapi $(hdr-dst)
-	$(Q)$(MAKE) $(hdr-inst)=techpack
+	$(Q)$(MAKE) $(hdr-inst)=techpack/audio/include/uapi/linux dst=include/linux
+	$(Q)$(MAKE) $(hdr-inst)=techpack/audio/include/uapi/sound dst=include/sound
 
 PHONY += headers_check_all
 headers_check_all: headers_install_all
