@@ -168,9 +168,6 @@ struct bfq_entity {
 	/* budget, used also to calculate F_i: F_i = S_i + @budget / @weight */
 	int budget;
 
-	/* device weight, if non-zero, it overrides the default weight of
-	 * bfq_group_data */
-	int dev_weight;
 	/* weight of the queue */
 	int weight;
 	/* next weight if a change is in progress */
@@ -809,13 +806,8 @@ enum bfqq_expiration {
 	BFQQE_PREEMPTED		/* preemption in progress */
 };
 
-struct bfq_stat {
-	struct percpu_counter		cpu_cnt;
-	atomic64_t			aux_cnt;
-};
-
 struct bfqg_stats {
-#ifdef CONFIG_BFQ_CGROUP_DEBUG
+#if defined(CONFIG_BFQ_GROUP_IOSCHED) && defined(CONFIG_DEBUG_BLK_CGROUP)
 	/* number of ios merged */
 	struct blkg_rwstat		merged;
 	/* total time spent on device in ns, may not be accurate w/ queueing */
@@ -825,25 +817,25 @@ struct bfqg_stats {
 	/* number of IOs queued up */
 	struct blkg_rwstat		queued;
 	/* total disk time and nr sectors dispatched by this group */
-	struct bfq_stat		time;
+	struct blkg_stat		time;
 	/* sum of number of ios queued across all samples */
-	struct bfq_stat		avg_queue_size_sum;
+	struct blkg_stat		avg_queue_size_sum;
 	/* count of samples taken for average */
-	struct bfq_stat		avg_queue_size_samples;
+	struct blkg_stat		avg_queue_size_samples;
 	/* how many times this group has been removed from service tree */
-	struct bfq_stat		dequeue;
+	struct blkg_stat		dequeue;
 	/* total time spent waiting for it to be assigned a timeslice. */
-	struct bfq_stat		group_wait_time;
+	struct blkg_stat		group_wait_time;
 	/* time spent idling for this blkcg_gq */
-	struct bfq_stat		idle_time;
+	struct blkg_stat		idle_time;
 	/* total time with empty current active q with other requests queued */
-	struct bfq_stat		empty_time;
+	struct blkg_stat		empty_time;
 	/* fields after this shouldn't be cleared on stat reset */
 	u64				start_group_wait_time;
 	u64				start_idle_time;
 	u64				start_empty_time;
 	uint16_t			flags;
-#endif /* CONFIG_BFQ_CGROUP_DEBUG */
+#endif	/* CONFIG_BFQ_GROUP_IOSCHED && CONFIG_DEBUG_BLK_CGROUP */
 };
 
 #ifdef CONFIG_BFQ_GROUP_IOSCHED
