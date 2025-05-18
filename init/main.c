@@ -214,6 +214,25 @@ bool always_warm_reboot(void)
 	return warm_reboot;
 }
 
+static bool disable_msm_perf = false;
+
+static int __init set_disable_msm_perf(char *val)
+{
+	int tmp = disable_msm_perf;
+
+	if (get_option(&val, &tmp)) {
+		disable_msm_perf = tmp != 0;
+	}
+
+	return 0;
+}
+__setup("no_msm_perf_boost=", set_disable_msm_perf);
+
+bool msm_perf_disabled(void)
+{
+	return disable_msm_perf;
+}
+
 /*
  * Used to generate warnings if static_key manipulation functions are used
  * before jump_label_init is called.
@@ -692,6 +711,8 @@ asmlinkage __visible void __init start_kernel(void)
 		init_protection ? "enabled" : "disabled");
 	pr_info("Hack: warm_reboot=%s\n",
 		warm_reboot ? "enabled" : "disabled");
+	pr_info("Hack: no_msm_perf_boost=%s\n",
+		disable_msm_perf ? "enabled" : "disabled");
 	pr_info("Workaround: legacy_timestamp_source=%s\n",
 			legacy_timestamp_source ? "enabled" : "disabled");
 	pr_info("Workaround: uname_bpf_spoof=%s\n",
