@@ -27,6 +27,7 @@
 #include <linux/battery_saver.h>
 #include <linux/kthread.h>
 #include <linux/sched/core_ctl.h>
+#include <linux/workarounds.h>
 
 /*
  * Sched will provide the data for every 20ms window,
@@ -86,7 +87,7 @@ static int set_cpu_min_freq(const char *buf, const struct kernel_param *kp)
 	struct cpufreq_policy policy;
 	cpumask_var_t limit_mask;
 
-	if (is_battery_saver_on())
+	if (is_battery_saver_on() || msm_perf_disabled())
 		cp = disable;
 
 	int ret = 0;
@@ -99,7 +100,7 @@ static int set_cpu_min_freq(const char *buf, const struct kernel_param *kp)
 	while ((cp = strpbrk(cp + 1, " :")))
 		ntokens++;
 
-	cp = is_battery_saver_on() ? disable : buf;
+	cp = (is_battery_saver_on() || msm_perf_disabled()) ? disable : buf;
 
 	/* CPU:value pair */
 	if (!(ntokens % 2))
