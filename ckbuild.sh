@@ -21,7 +21,39 @@ GCC_REPO="https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-l
 GCC64_REPO="https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9"
 # AnyKernel3
 AK3_URL="https://github.com/Flopster101/AnyKernel3"
-AK3_BRANCH="floppy-reborn"
+
+# Device fragments
+GINKGO_FRAGMENT="vendor/ginkgo.config"
+LAUREL_FRAGMENT="vendor/laurel_sprout.config"
+
+# Parse device argument
+if [[ -z "$1" ]]; then
+    echo -e "\nERROR: Please specify device to build!\n"
+    exit 1
+fi
+
+TARGET_DEVICE="$1"
+shift
+
+# Set device-specific variables
+case "$TARGET_DEVICE" in
+    ginkgo)
+        AK3_BRANCH="floppy-reborn"
+        DEVICE="Redmi Note 8/8T"
+        CODENAME="ginkgo"
+        FRAGMENT="$GINKGO_FRAGMENT"
+        ;;
+    laurel_sprout)
+        AK3_BRANCH="floppy-reborn-laurel"
+        DEVICE="Xiaomi Mi A3"
+        CODENAME="laurel_sprout"
+        FRAGMENT="$LAUREL_FRAGMENT"
+        ;;
+    *)
+        echo -e "\nERROR: Unknown device: $TARGET_DEVICE\n"
+        exit 1
+        ;;
+esac
 
 # Workspace
 if [[ -d /workspace ]]; then
@@ -48,7 +80,6 @@ fi
 
 # Other
 DEFAULT_DEFCONFIG="vendor/trinket-perf_defconfig"
-GINKGO_FRAGMENT="vendor/ginkgo.config"
 BASE_FRAGMENT="vendor/xiaomi-trinket.config"
 KERNEL_URL="https://github.com/Flopster101/flop_ginkgo_kernel"
 SECONDS=0 # builtin bash timer
@@ -161,8 +192,6 @@ fi
 
 ## Info message
 LINKER="ld.lld"
-DEVICE="Redmi Note 8/8T"
-CODENAME="ginkgo"
 
 ## Secrets
 if [[ "$TEST_CHANNEL" == "0" ]]; then
@@ -190,7 +219,7 @@ else
     CK_TYPE="Vanilla"
     CK_TYPE_SHORT="V"
 fi
-ZIP_PATH="$WP/Floppy_$FK_VER-$CK_TYPE-ginkgo-$DATE.zip"
+ZIP_PATH="$WP/Floppy_$FK_VER-$CK_TYPE-$CODENAME-$DATE.zip"
 
 echo -e "\nINFO: Build info:
 - Device: $DEVICE ($CODENAME)
@@ -519,7 +548,11 @@ prep_build() {
 
 build() {
     mkdir -p out
-    make O=out ARCH=arm64 "$DEFCONFIG" "$BASE_FRAGMENT" "$GINKGO_FRAGMENT" $([[ "$DO_KSU" == "1" ]] && echo "ksu.config") 2>&1 | tee log.txt
+    if [[ "$DO_REGEN" = "1" ]]; then
+        make O=out ARCH=arm64 "$DEFCONFIG" $([[ "$DO_KSU" == "1" ]] && echo "ksu.config") 2>&1 | tee log.txt
+    else
+        make O=out ARCH=arm64 "$DEFCONFIG" "$BASE_FRAGMENT" "$FRAGMENT" $([[ "$DO_KSU" == "1" ]] && echo "ksu.config") 2>&1 | tee log.txt
+    fi
 
     # Delete leftovers
     rm -f out/arch/arm64/boot/Image*
