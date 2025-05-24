@@ -102,6 +102,7 @@ KDIR="$(readlink -f .)"
 USE_GCC_BINUTILS="0"
 OUT_IMAGE="out/arch/arm64/boot/Image.gz-dtb"
 OUT_DTBO="out/arch/arm64/boot/dtbo.img"
+OUT_DTB="out/arch/arm64/boot/dts/qcom/trinket.dtb"
 
 # Ensure the toolchains directory exists
 if [[ ! -d "$TC_DIR" ]]; then
@@ -636,7 +637,7 @@ build() {
 
 post_build() {
     ## Check if the kernel binaries were built.
-    if [[ -f "$OUT_IMAGE" ]] && [[ -f "$OUT_DTBO" ]]; then
+    if [[ -f "$OUT_IMAGE" ]] && [[ -f "$OUT_DTBO" ]] && [[ -f "$OUT_DTB" ]]; then
         echo -e "\nINFO: Kernel compiled succesfully! Zipping up..."
     else
         echo -e "\nERROR: Kernel files not found! Compilation failed?"
@@ -659,6 +660,7 @@ post_build() {
     ## Copy the built binaries
     cp "$OUT_IMAGE" "$AK3_DIR"
     cp "$OUT_DTBO" "$AK3_DIR"
+    cp "$OUT_DTB" "$AK3_DIR/dtb"
     rm -f *zip
 
     ## Prepare kernel flashable zip
