@@ -635,28 +635,13 @@ build() {
 
 post_build() {
     ## Check if the kernel binaries were built.
-    if [[ "$CODENAME" == "laurel_sprout" ]]; then
-        IMAGE_FILE="out/arch/arm64/boot/Image.gz"
-        # Only check for Image.gz for laurel_sprout
-        if [[ -f "$IMAGE_FILE" ]]; then
-            echo -e "\nINFO: Kernel compiled succesfully! Zipping up..."
-        else
-            echo -e "\nERROR: Kernel file not found! Compilation failed?"
-            echo -e "\nINFO: Uploading log to bashupload.com\n"
-            curl -T log.txt bashupload.com
-            exit 1
-        fi
+    if [[ -f "$OUT_IMAGE" ]] && [[ -f "$OUT_DTBO" ]]; then
+        echo -e "\nINFO: Kernel compiled succesfully! Zipping up..."
     else
-        IMAGE_FILE="$OUT_IMAGE"
-        # Check for both Image.gz-dtb and dtbo.img for other devices
-        if [[ -f "$OUT_IMAGE" ]] && [[ -f "$OUT_DTBO" ]]; then
-            echo -e "\nINFO: Kernel compiled succesfully! Zipping up..."
-        else
-            echo -e "\nERROR: Kernel files not found! Compilation failed?"
-            echo -e "\nINFO: Uploading log to bashupload.com\n"
-            curl -T log.txt bashupload.com
-            exit 1
-        fi
+        echo -e "\nERROR: Kernel files not found! Compilation failed?"
+        echo -e "\nINFO: Uploading log to bashupload.com\n"
+        curl -T log.txt bashupload.com
+        exit 1
     fi
 
     # If local AK3 copy exists, assume testing.
@@ -671,10 +656,8 @@ post_build() {
     fi
 
     ## Copy the built binaries
-    cp "$IMAGE_FILE" "$AK3_DIR"
-    if [[ "$CODENAME" != "laurel_sprout" ]]; then
-        cp "$OUT_DTBO" "$AK3_DIR"
-    fi
+    cp "$OUT_IMAGE" "$AK3_DIR"
+    cp "$OUT_DTBO" "$AK3_DIR"
     rm -f *zip
 
     ## Prepare kernel flashable zip
