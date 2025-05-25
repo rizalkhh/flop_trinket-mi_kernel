@@ -102,7 +102,7 @@ KDIR="$(readlink -f .)"
 USE_GCC_BINUTILS="0"
 OUT_IMAGE="out/arch/arm64/boot/Image.gz-dtb"
 OUT_DTBO="out/arch/arm64/boot/dtbo.img"
-OUT_DTB="out/arch/arm64/boot/dts/qcom/trinket.dtb"
+OUT_DTB="out/arch/arm64/boot/dts/xiaomi/qcom-base/trinket.dtb"
 
 # Ensure the toolchains directory exists
 if [[ ! -d "$TC_DIR" ]]; then
