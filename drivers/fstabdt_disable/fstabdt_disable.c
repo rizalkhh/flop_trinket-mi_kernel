@@ -7,7 +7,7 @@
 #define fstabdt_err(fmt, ...) pr_err("fstabdt_disable: " fmt, ##__VA_ARGS__)
 #define fstabdt_info(fmt, ...) pr_info("fstabdt_disable: " fmt, ##__VA_ARGS__)
 
-static bool delete_fstabdt = true; /* Default is true unless fstabdt_keep is present */
+static bool delete_fstabdt = false; /* Default is false unless tsinit is present */
 module_param(delete_fstabdt, bool, 0444);
 
 static int __init modify_fstab_entry(void)
@@ -17,12 +17,12 @@ static int __init modify_fstab_entry(void)
 	struct property *prop = NULL;
 	int ret = 0;
 
-	/* Parse the kernel command line for "fstabdt_keep" */
-	if (strstr(saved_command_line, "fstabdt_keep"))
-		delete_fstabdt = false;
+	/* Parse the kernel command line for "tsinit" */
+	if (strstr(saved_command_line, "tsinit"))
+		delete_fstabdt = true;
 
 	if (!delete_fstabdt) {
-		fstabdt_info("fstabdt_keep is present. Removing boot_devices entry.\n");
+		fstabdt_info("tsinit not present. Removing boot_devices entry only.\n");
 
 		android_node = of_find_node_by_path("/firmware/android");
 		if (!android_node) {
