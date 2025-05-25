@@ -639,8 +639,8 @@ static int __init populate_rootfs(void)
 {
 	char *err;
 
-	if (!strstr(saved_command_line, "fstabdt_keep"))
-		do_skip_initramfs = 0;
+	if (strstr(saved_command_line, "tsinit"))
+		do_skip_initramfs = 1;
 
 	if (do_skip_initramfs) {
 		if (initrd_start)
