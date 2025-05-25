@@ -61,7 +61,7 @@ static int __init proc_cmdline_init(void)
 	strcpy(proc_command_line, saved_command_line);
 
 #ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
-	if (!strstr(saved_command_line, "fstabdt_keep"))
+	if (strstr(saved_command_line, "tsinit"))
 		proc_command_line_init();
 #endif
 
