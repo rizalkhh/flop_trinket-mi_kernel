@@ -101,8 +101,12 @@ RV_DIR="$TC_DIR/rvclang"
 KDIR="$(readlink -f .)"
 USE_GCC_BINUTILS="0"
 OUT_IMAGE="out/arch/arm64/boot/Image.gz-dtb"
-OUT_DTBO="out/arch/arm64/boot/dtbo.img"
+DTBO_TMP="out/dtbotmp"
+OUT_DTBO="$DTBO_TMP/dtbo.img"
 OUT_DTB="out/arch/arm64/boot/dts/xiaomi/qcom-base/trinket.dtb"
+
+IN_DTBO_GINKGO="out/arch/arm64/boot/dts/xiaomi/ginkgo-trinket-overlay.dtbo"
+IN_DTBO_LAUREL="out/arch/arm64/boot/dts/xiaomi/laurel_sprout-trinket-overlay.dtbo"
 
 # Ensure the toolchains directory exists
 if [[ ! -d "$TC_DIR" ]]; then
@@ -635,6 +639,25 @@ build() {
     fi
 }
 
+dtbo_build() {
+    echo -e "\nINFO: Running dtbo build..."
+    mkdir -p "$DTBO_TMP"
+    local IN_DTBO=""
+    case "$CODENAME" in
+        ginkgo)
+            IN_DTBO="$IN_DTBO_GINKGO"
+            ;;
+        laurel_sprout)
+            IN_DTBO="$IN_DTBO_LAUREL"
+            ;;
+        *)
+            echo "ERROR: Unknown device for DTBO build!"
+            exit 1
+            ;;
+    esac
+    python3 "$KDIR/scripts/dtc/libfdt/mkdtboimg.py" create "$OUT_DTBO" --custom0=0x00000000 --custom1=0x00000000 --page_size=4096 "$IN_DTBO"
+}
+
 post_build() {
     ## Check if the kernel binaries were built.
     if [[ -f "$OUT_IMAGE" ]] && [[ -f "$OUT_DTBO" ]] && [[ -f "$OUT_DTB" ]]; then
@@ -708,6 +731,7 @@ clean_tmp() {
     echo -e "INFO: Cleaning after build..."
     rm -f "$OUT_IMAGE"
     rm -f "$OUT_DTBO"
+    rm -rf "$DTBO_TMP"
 }
 
 ## Run build
@@ -717,6 +741,7 @@ if [[ "$DO_CLEAN" == "1" ]]; then
 fi
 prep_build
 build
+dtbo_build
 post_build
 clean_tmp
 
