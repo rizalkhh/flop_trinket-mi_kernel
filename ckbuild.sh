@@ -103,7 +103,12 @@ USE_GCC_BINUTILS="0"
 OUT_IMAGE="out/arch/arm64/boot/Image.gz-dtb"
 DTBO_TMP="out/dtbotmp"
 OUT_DTBO="$DTBO_TMP/dtbo.img"
-OUT_DTB="out/arch/arm64/boot/dts/xiaomi/qcom-base/trinket.dtb"
+# Set OUT_DTB based on device
+if [[ "$CODENAME" == "laurel_sprout" ]]; then
+    OUT_DTB="out/arch/arm64/boot/dts/xiaomi/laurel_sprout-trinket-base.dtb"
+else
+    OUT_DTB="out/arch/arm64/boot/dts/xiaomi/qcom-base/trinket.dtb"
+fi
 
 IN_DTBO_GINKGO="out/arch/arm64/boot/dts/xiaomi/ginkgo-trinket-overlay.dtbo"
 IN_DTBO_LAUREL="out/arch/arm64/boot/dts/xiaomi/laurel_sprout-trinket-overlay.dtbo"
