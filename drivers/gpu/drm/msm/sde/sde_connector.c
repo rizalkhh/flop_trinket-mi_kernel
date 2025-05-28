@@ -1152,16 +1152,16 @@ static int sde_connector_atomic_set_property(struct drm_connector *connector,
 	struct sde_connector_state *c_state;
 	int idx, rc;
 	uint64_t fence_fd;
-#ifdef CONFIG_MACH_XIAOMI_F9S
-	const char *sde_mode_dpms_str[] = {
-		[SDE_MODE_DPMS_ON] = "SDE_MODE_DPMS_ON",
-		[SDE_MODE_DPMS_LP1] = "SDE_MODE_DPMS_LP1",
-		[SDE_MODE_DPMS_LP2] = "SDE_MODE_DPMS_LP2",
-		[SDE_MODE_DPMS_STANDBY] = "SDE_MODE_DPMS_STANDBY",
-		[SDE_MODE_DPMS_SUSPEND] = "SDE_MODE_DPMS_SUSPEND",
-		[SDE_MODE_DPMS_OFF] = "SDE_MODE_DPMS_OFF",
-	};
-#endif
+// #ifdef CONFIG_MACH_XIAOMI_F9S
+// 	const char *sde_mode_dpms_str[] = {
+// 		[SDE_MODE_DPMS_ON] = "SDE_MODE_DPMS_ON",
+// 		[SDE_MODE_DPMS_LP1] = "SDE_MODE_DPMS_LP1",
+// 		[SDE_MODE_DPMS_LP2] = "SDE_MODE_DPMS_LP2",
+// 		[SDE_MODE_DPMS_STANDBY] = "SDE_MODE_DPMS_STANDBY",
+// 		[SDE_MODE_DPMS_SUSPEND] = "SDE_MODE_DPMS_SUSPEND",
+// 		[SDE_MODE_DPMS_OFF] = "SDE_MODE_DPMS_OFF",
+// 	};
+// #endif
 
 	if (!connector || !state || !property) {
 		SDE_ERROR("invalid argument(s), conn %pK, state %pK, prp %pK\n",
