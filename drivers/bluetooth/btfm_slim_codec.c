@@ -247,10 +247,17 @@ static int btfm_slim_dai_prepare(struct snd_pcm_substream *substream,
 		add by wangfajie@longcheer.com at 20190501*/
 #if defined(CONFIG_FM_INSIDE_LAN)
 		g_fm_state = true;
-		if(!g_is_headset_on)
+		if(!g_is_headset_on && gpio_is_valid(g_fm_lan_gpio))
 		{
+			/* Configure GPIO first */
+			ret = gpio_direction_output(g_fm_lan_gpio, 1);
+			if (ret < 0) {
+				BTFMSLIM_ERR("failed to set FM LAN gpio direction: %d", ret);
+				return ret;
+			}
+
+			/* Enable power only after GPIO is properly configured */
 			fm_lan_power_set(1);
-			gpio_direction_output(g_fm_lan_gpio, 1);
 			BTFMSLIM_ERR("fm-inside-lan enable lan gpio output");
 		}
 #endif
