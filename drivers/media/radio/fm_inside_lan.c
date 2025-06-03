@@ -100,15 +100,29 @@ exit:
 
 void fm_lan_power_set(bool status)
 {
-	if(status){
-   		fm_enable_regulator(true);
-		pr_err("%s: fm lan power enable\n", __func__);
-   	}else{
-   		fm_enable_regulator(false);
-		pr_err("%s: fm lan power disable\n", __func__);
+	if (!fm) {
+		pr_err("%s: fm driver not initialized\n", __func__);
+		return;
 	}
 
-   return;
+	mutex_lock(&fm->lock);
+
+	if(status) {
+		if (fm_enable_regulator(true) == 0) {
+			pr_info("%s: fm lan power enabled\n", __func__);
+		} else {
+			pr_err("%s: failed to enable fm lan power\n", __func__);
+		}
+	} else {
+		if (fm_enable_regulator(false) == 0) {
+			pr_info("%s: fm lan power disabled\n", __func__);
+		} else {
+			pr_err("%s: failed to disable fm lan power\n", __func__);
+		}
+	}
+
+	mutex_unlock(&fm->lock);
+	return;
 }EXPORT_SYMBOL(fm_lan_power_set);
 
 static int fm_power_probe(struct platform_device *pdev)
