@@ -221,16 +221,16 @@ int dsi_display_set_backlight(struct drm_connector *connector,
 	u32 bl_scale, bl_scale_ad;
 	u64 bl_temp;
 	int rc = 0;
-#ifdef CONFIG_MACH_XIAOMI_F9S
-	const char *sde_mode_dpms_str[] = {
-		[SDE_MODE_DPMS_ON] = "SDE_MODE_DPMS_ON",
-		[SDE_MODE_DPMS_LP1] = "SDE_MODE_DPMS_LP1",
-		[SDE_MODE_DPMS_LP2] = "SDE_MODE_DPMS_LP2",
-		[SDE_MODE_DPMS_STANDBY] = "SDE_MODE_DPMS_STANDBY",
-		[SDE_MODE_DPMS_SUSPEND] = "SDE_MODE_DPMS_SUSPEND",
-		[SDE_MODE_DPMS_OFF] = "SDE_MODE_DPMS_OFF",
-	};
-#endif
+// #ifdef CONFIG_MACH_XIAOMI_F9S
+// 	const char *sde_mode_dpms_str[] = {
+// 		[SDE_MODE_DPMS_ON] = "SDE_MODE_DPMS_ON",
+// 		[SDE_MODE_DPMS_LP1] = "SDE_MODE_DPMS_LP1",
+// 		[SDE_MODE_DPMS_LP2] = "SDE_MODE_DPMS_LP2",
+// 		[SDE_MODE_DPMS_STANDBY] = "SDE_MODE_DPMS_STANDBY",
+// 		[SDE_MODE_DPMS_SUSPEND] = "SDE_MODE_DPMS_SUSPEND",
+// 		[SDE_MODE_DPMS_OFF] = "SDE_MODE_DPMS_OFF",
+// 	};
+// #endif
 
 	if (dsi_display == NULL || dsi_display->panel == NULL)
 		return -EINVAL;
