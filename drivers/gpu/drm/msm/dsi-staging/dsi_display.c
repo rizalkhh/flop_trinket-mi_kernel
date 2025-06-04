@@ -5813,6 +5813,53 @@ static ssize_t dsi_display_set_cabc_still(struct device *dev,
 	return len;
 }
 
+static ssize_t dsi_display_set_cabc_compatible(struct device *dev,
+						struct device_attribute *attr,
+						const char *buf, size_t len)
+{
+	int rc = 0;
+	int param = 0;
+	struct dsi_display *display;
+
+	display = dev_get_drvdata(dev);
+	if (!display) {
+		pr_err("Invalid display\n");
+		return -EINVAL;
+	}
+
+	rc = kstrtoint(buf, 10, &param);
+	if (rc) {
+		pr_err("kstrtoint failed. rc=%d\n", rc);
+		return rc;
+	}
+
+	/* Using compatible index from 0-3:
+	 * 0: CABC_OFF
+	 * 1: CABC_ON
+	 * 2: CABC_STILL_ON
+	 * 3: CABC_MOVIE_ON
+	 */
+	switch (param) {
+	case 0: /* cabc off */
+		dsi_panel_set_feature(display->panel, DSI_CMD_SET_CABC_OFF);
+		break;
+	case 1: /* cabc on */
+		dsi_panel_set_feature(display->panel, DSI_CMD_SET_CABC_ON);
+		break;
+	case 2: /* cabc still on */
+		dsi_panel_set_feature(display->panel, DSI_CMD_SET_CABC_STILL_ON);
+		break;
+	case 3: /* cabc movie on */
+		dsi_panel_set_feature(display->panel, DSI_CMD_SET_CABC_MOVIE_ON);
+		break;
+	default:
+		pr_err("unknown cabc mode: %d\n", param);
+		break;
+	}
+
+	return len;
+}
+
 static ssize_t dsi_display_set_hbm(struct device *dev,
 				   struct device_attribute *attr,
 				   const char *buf, size_t len)
@@ -5860,12 +5907,17 @@ static DEVICE_ATTR(dsi_display_cabc_movie, 0644, NULL,
 		   dsi_display_set_cabc_movie);
 static DEVICE_ATTR(dsi_display_cabc_still, 0644, NULL,
 		   dsi_display_set_cabc_still);
+/* Shorter aliases for compatibility with custom ROMs */
+static DEVICE_ATTR(hbm, 0644, NULL, dsi_display_set_hbm);
+static DEVICE_ATTR(cabc, 0644, NULL, dsi_display_set_cabc_compatible);
 
 static struct attribute *dsi_display_feature_attrs[] = {
 	&dev_attr_dsi_display_cabc.attr,
 	&dev_attr_dsi_display_hbm.attr,
 	&dev_attr_dsi_display_cabc_movie.attr,
 	&dev_attr_dsi_display_cabc_still.attr,
+	&dev_attr_hbm.attr,
+	&dev_attr_cabc.attr,
 	NULL,
 };
 
