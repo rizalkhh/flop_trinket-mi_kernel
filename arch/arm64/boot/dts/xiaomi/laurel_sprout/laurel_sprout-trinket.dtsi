@@ -23,6 +23,7 @@
 #include "laurel_sprout-trinket-audio.dtsi"
 #include "laurel_sprout-trinket-battery.dtsi"
 #include "laurel_sprout-trinket-camera.dtsi"
+#include "laurel_sprout-trinket-battery.dtsi"
 #include "laurel_sprout-trinket-display.dtsi"
 #include "laurel_sprout-trinket-fingerprint.dtsi"
 #include "laurel_sprout-trinket-ir.dtsi"
