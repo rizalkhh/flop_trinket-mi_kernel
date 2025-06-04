@@ -5860,6 +5860,34 @@ static ssize_t dsi_display_set_cabc_compatible(struct device *dev,
 	return len;
 }
 
+static ssize_t dsi_display_get_hbm(struct device *dev,
+				   struct device_attribute *attr, char *buf)
+{
+	struct dsi_display *display;
+
+	display = dev_get_drvdata(dev);
+	if (!display) {
+		pr_err("Invalid display\n");
+		return -EINVAL;
+	}
+
+	return snprintf(buf, PAGE_SIZE, "%d\n", display->panel->hbm_mode);
+}
+
+static ssize_t dsi_display_get_cabc(struct device *dev,
+					struct device_attribute *attr, char *buf)
+{
+	struct dsi_display *display;
+
+	display = dev_get_drvdata(dev);
+	if (!display) {
+		pr_err("Invalid display\n");
+		return -EINVAL;
+	}
+
+	return snprintf(buf, PAGE_SIZE, "%d\n", display->panel->cabc_mode);
+}
+
 static ssize_t dsi_display_set_hbm(struct device *dev,
 				   struct device_attribute *attr,
 				   const char *buf, size_t len)
@@ -5901,15 +5929,15 @@ static ssize_t dsi_display_set_hbm(struct device *dev,
 	return len;
 }
 
-static DEVICE_ATTR(dsi_display_cabc, 0644, NULL, dsi_display_set_cabc);
-static DEVICE_ATTR(dsi_display_hbm, 0644, NULL, dsi_display_set_hbm);
-static DEVICE_ATTR(dsi_display_cabc_movie, 0644, NULL,
+static DEVICE_ATTR(dsi_display_cabc, 0644, dsi_display_get_cabc, dsi_display_set_cabc);
+static DEVICE_ATTR(dsi_display_hbm, 0644, dsi_display_get_hbm, dsi_display_set_hbm);
+static DEVICE_ATTR(dsi_display_cabc_movie, 0644, dsi_display_get_cabc,
 		   dsi_display_set_cabc_movie);
-static DEVICE_ATTR(dsi_display_cabc_still, 0644, NULL,
+static DEVICE_ATTR(dsi_display_cabc_still, 0644, dsi_display_get_cabc,
 		   dsi_display_set_cabc_still);
 /* Shorter aliases for compatibility with custom ROMs */
-static DEVICE_ATTR(hbm, 0644, NULL, dsi_display_set_hbm);
-static DEVICE_ATTR(cabc, 0644, NULL, dsi_display_set_cabc_compatible);
+static DEVICE_ATTR(hbm, 0644, dsi_display_get_hbm, dsi_display_set_hbm);
+static DEVICE_ATTR(cabc, 0644, dsi_display_get_cabc, dsi_display_set_cabc_compatible);
 
 static struct attribute *dsi_display_feature_attrs[] = {
 	&dev_attr_dsi_display_cabc.attr,
