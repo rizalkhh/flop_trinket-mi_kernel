@@ -3992,6 +3992,11 @@ struct dsi_panel *dsi_panel_get(struct device *parent,
 	panel->parent = parent;
 	panel->type = type;
 
+	// Initialize HBM and CABC mode tracking
+	panel->hbm_mode = 0;
+	panel->cabc_mode = 0;
+	panel->hbm_enabled = false;
+
 	dsi_panel_update_util(panel, parser_node);
 	utils = &panel->utils;
 
@@ -4882,6 +4887,40 @@ int dsi_panel_set_feature(struct dsi_panel *panel, enum dsi_cmd_set_type type)
 	}
 
 	mutex_lock(&panel->panel_lock);
+
+	// Update the current mode tracking
+	switch (type) {
+	case DSI_CMD_SET_HBM1_ON:
+		panel->hbm_mode = 1;
+		panel->hbm_enabled = true;
+		break;
+	case DSI_CMD_SET_HBM2_ON:
+		panel->hbm_mode = 2;
+		panel->hbm_enabled = true;
+		break;
+	case DSI_CMD_SET_HBM3_ON:
+		panel->hbm_mode = 3;
+		panel->hbm_enabled = true;
+		break;
+	case DSI_CMD_SET_HBM_OFF:
+		panel->hbm_mode = 0;
+		panel->hbm_enabled = false;
+		break;
+	case DSI_CMD_SET_CABC_ON:
+		panel->cabc_mode = 1;
+		break;
+	case DSI_CMD_SET_CABC_OFF:
+		panel->cabc_mode = 0;
+		break;
+	case DSI_CMD_SET_CABC_MOVIE_ON:
+		panel->cabc_mode = 3;
+		break;
+	case DSI_CMD_SET_CABC_STILL_ON:
+		panel->cabc_mode = 2;
+		break;
+	default:
+		break;
+	}
 
 	rc = dsi_panel_tx_cmd_set(panel, type);
 	if (rc) {

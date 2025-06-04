@@ -256,6 +256,8 @@ struct dsi_panel {
 	bool doze_status;
 #endif
 	bool hbm_enabled;
+	int hbm_mode;
+	int cabc_mode;
 	bool sync_broadcast_en;
 	int power_mode;
 #ifdef CONFIG_MACH_XIAOMI_F9S
