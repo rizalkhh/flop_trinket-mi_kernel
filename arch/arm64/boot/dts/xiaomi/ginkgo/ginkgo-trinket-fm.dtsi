@@ -1,0 +1,7 @@
+&soc {
+    fm_inside_lan {
+        status = "ok";
+        compatible = "qcom,fm_inside_lan";
+        vdd_io-supply = <&L21A>;
+    };
+};
