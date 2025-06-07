@@ -7,4 +7,14 @@
 			regulator-always-on;
 		};
 	};
+
+	rpm-regulator-ldoa21 {
+		status = "okay";
+		L21A: pm6125_l21: regulator-l21 {
+			regulator-min-microvolt = <2600000>;
+			regulator-max-microvolt = <2856000>;
+			qcom,init-voltage = <2600000>;
+			status = "okay";
+		};
+	};
 };
