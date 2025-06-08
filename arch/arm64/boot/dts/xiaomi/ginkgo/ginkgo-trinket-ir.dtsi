@@ -1,7 +1,7 @@
 &qupv3_se8_spi {
 	status = "ok";
 	irled@1 {
-		compatible = "ir-spi-led";
+		compatible = "ir-spi-led", "xiaomi,ginkgo-ir-spidev";
 		reg = <1>; /* Chip select 0 */
 
 		duty-cycle = <30>;

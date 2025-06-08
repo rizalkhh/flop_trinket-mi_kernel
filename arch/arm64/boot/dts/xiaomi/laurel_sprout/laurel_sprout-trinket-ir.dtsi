@@ -9,7 +9,7 @@
 	qcom,master-id = <84>;
 	status = "ok";
 	spi_ir@1 {
-		compatible = "ir-spi-led";
+		compatible = "ir-spi-led", "xiaomi,laurel_sprout-ir-spidev";
 		reg = <1>;
 
 		duty-cycle = <30>;
