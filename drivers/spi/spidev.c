@@ -35,6 +35,7 @@
 #include <linux/spi/spidev.h>
 
 #include <linux/uaccess.h>
+#include <linux/workarounds.h>
 
 
 /*
@@ -772,6 +773,8 @@ static const struct of_device_id spidev_dt_ids[] = {
 	{ .compatible = "ge,achc" },
 	{ .compatible = "semtech,sx1301" },
 	{ .compatible = "qcom,spi-msm-codec-slave" },
+	{ .compatible = "xiaomi,ginkgo-ir-spidev" },
+	{ .compatible = "xiaomi,laurel_sprout-ir-spidev" },
 	{},
 };
 MODULE_DEVICE_TABLE(of, spidev_dt_ids);
@@ -821,6 +824,19 @@ static int spidev_probe(struct spi_device *spi)
 	struct spidev_data	*spidev;
 	int			status;
 	unsigned long		minor;
+	bool is_legacy_ir_device = false;
+
+	if (spi->dev.of_node) {
+		if (of_device_is_compatible(spi->dev.of_node, "xiaomi,ginkgo-ir-spidev") ||
+			of_device_is_compatible(spi->dev.of_node, "xiaomi,laurel_sprout-ir-spidev")) {
+			is_legacy_ir_device = true;
+		}
+	}
+
+	if (is_legacy_ir_device && !is_using_legacy_ir_hal()) {
+		dev_info(&spi->dev, "LIRC-based HAL active, spidev yielding for this device.\n");
+		return -ENODEV;
+	}
 
 	/*
 	 * spidev should never be referenced in DT without a specific

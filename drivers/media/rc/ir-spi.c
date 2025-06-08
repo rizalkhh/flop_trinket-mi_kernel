@@ -16,6 +16,7 @@
 #include <linux/of_gpio.h>
 #include <linux/regulator/consumer.h>
 #include <linux/spi/spi.h>
+#include <linux/workarounds.h>
 #include <media/rc-core.h>
 
 #define IR_SPI_DRIVER_NAME		"ir-spi"
@@ -139,6 +140,11 @@ static int ir_spi_probe(struct spi_device *spi)
 	int ret;
 	u8 dc;
 	struct ir_spi_data *idata;
+
+	if (is_using_legacy_ir_hal()) {
+		dev_info(&spi->dev, "Legacy IR HAL active, ir-spi deferring to spidev.\n");
+		return -ENODEV;
+	}
 
 	idata = devm_kzalloc(&spi->dev, sizeof(*idata), GFP_KERNEL);
 	if (!idata)

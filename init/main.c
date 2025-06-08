@@ -153,6 +153,26 @@ static int __init set_uname_bpf_spoof(char *val)
 }
 __setup("uname_bpf_spoof=", set_uname_bpf_spoof);
 
+/* Workaround: legacy_ir_hal */
+static bool legacy_ir_hal = false;
+
+static int __init set_legacy_ir_hal(char *val)
+{
+	int tmp = legacy_ir_hal;
+
+	if (get_option(&val, &tmp)) {
+		legacy_ir_hal = tmp != 0;
+	}
+
+	return 0;
+}
+__setup("legacy_ir_hal=", set_legacy_ir_hal);
+
+bool is_using_legacy_ir_hal(void)
+{
+	return legacy_ir_hal;
+}
+
 bool is_bpf_spoof_enabled(void)
 {
 	return uname_bpf_spoof;
