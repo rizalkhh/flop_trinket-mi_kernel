@@ -128,7 +128,7 @@ fi
 ## Customizable vars
 
 # FloppyKernel version
-FK_VER="v1.0b"
+FK_VER="v1.0"
 
 # Toggles
 USE_CCACHE=1
