@@ -186,7 +186,6 @@ else
     BUILD_TYPE="Testing"
 fi
 
-IS_RELEASE=0
 TEST_CHANNEL=1
 #TEST_BUILD=0
 
