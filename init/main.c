@@ -195,6 +195,26 @@ unsigned int is_legacy_timestamp(void)
 	return legacy_timestamp_source;
 }
 
+/* Workaround: no_kernel_dimming */
+static bool no_kernel_dimming = false;
+
+static int __init set_no_kernel_dimming(char *val)
+{
+	int tmp = no_kernel_dimming;
+
+	if (get_option(&val, &tmp)) {
+		no_kernel_dimming = tmp != 0;
+	}
+
+	return 0;
+}
+__setup("no_kernel_dimming=", set_no_kernel_dimming);
+
+bool uses_kernel_dimming(void)
+{
+	return !no_kernel_dimming;
+}
+
 /* Hacks */
 static bool init_protection = true;
 
