@@ -7737,6 +7737,9 @@ int dsi_display_get_dim_layer_alpha(void *dsi_display,
 	struct dsi_display *display = dsi_display;
 	int rc = -ENOTSUPP;
 
+	if (!is_device_f9s() || !uses_kernel_dimming())
+		return 0;
+
 	dsi_panel_acquire_panel_lock(display->panel);
 
 	switch (type) {

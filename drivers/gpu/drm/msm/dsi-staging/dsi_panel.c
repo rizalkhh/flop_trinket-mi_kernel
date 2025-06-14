@@ -968,6 +968,10 @@ static u32 dsi_panel_get_backlight(struct dsi_panel *panel)
 enum msm_dim_layer_type dsi_panel_update_dimlayer(struct dsi_panel *panel,
 						  enum msm_dim_layer_type type)
 {
+	if (!is_device_f9s() || !uses_kernel_dimming()) {
+		return panel->dimlayer_type;
+	}
+
 	dsi_panel_acquire_panel_lock(panel);
 
 	/* Skip if type of dimlayer was not changed */
