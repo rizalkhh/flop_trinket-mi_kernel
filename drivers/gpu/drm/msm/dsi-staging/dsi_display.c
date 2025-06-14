@@ -36,6 +36,7 @@
 #include <linux/msm_drm_notify.h>
 #include <linux/notifier.h>
 #include <linux/hardware_info.h>
+#include <linux/workarounds.h>
 
 #define to_dsi_display(x) container_of(x, struct dsi_display, host)
 #define INT_BASE_10 10
@@ -6560,7 +6561,8 @@ static void dsi_display_unbind(struct device *dev,
 
 	atomic_set(&display->clkrate_change_pending, 0);
 #ifdef CONFIG_MACH_XIAOMI_F9S
-	atomic_set(&display->fod_ui, false);
+	if (uses_kernel_dimming())
+		atomic_set(&display->fod_ui, false);
 #endif
 	(void)dsi_display_sysfs_deinit(display);
 	(void)dsi_display_debugfs_deinit(display);

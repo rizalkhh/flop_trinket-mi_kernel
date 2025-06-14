@@ -23,6 +23,7 @@
 #include "dsi_panel.h"
 #include "dsi_ctrl_hw.h"
 #include "dsi_parser.h"
+#include <linux/workarounds.h>
 
 #ifdef CONFIG_MACH_XIAOMI_C3J
 char g_lcd_id[128];
@@ -2870,27 +2871,29 @@ static int dsi_panel_parse_bl_config(struct dsi_panel *panel)
 		"qcom,mdss-dsi-bl-inverted-dbv");
 
 #ifdef CONFIG_MACH_XIAOMI_F9S
-	rc = utils->read_u32(utils->data, "qcom,disp-doze-lbm-backlight",
-				  &val);
-	if (rc) {
-		panel->bl_config.bl_doze_lpm = 0;
-		pr_debug("[%s] set doze lpm backlight to 0\n", panel->name);
-	} else {
-		panel->bl_config.bl_doze_lpm = val;
-	}
+	if (uses_kernel_dimming()) {
+		rc = utils->read_u32(utils->data, "qcom,disp-doze-lbm-backlight",
+					&val);
+		if (rc) {
+			panel->bl_config.bl_doze_lpm = 0;
+			pr_debug("[%s] set doze lpm backlight to 0\n", panel->name);
+		} else {
+			panel->bl_config.bl_doze_lpm = val;
+		}
 
-	rc = utils->read_u32(utils->data, "qcom,disp-doze-hbm-backlight",
-				  &val);
-	if (rc) {
-		panel->bl_config.bl_doze_hbm = 0;
-		pr_debug("[%s] set doze hbm backlight to 0\n", panel->name);
-	} else {
-		panel->bl_config.bl_doze_hbm = val;
-	}
+		rc = utils->read_u32(utils->data, "qcom,disp-doze-hbm-backlight",
+					&val);
+		if (rc) {
+			panel->bl_config.bl_doze_hbm = 0;
+			pr_debug("[%s] set doze hbm backlight to 0\n", panel->name);
+		} else {
+			panel->bl_config.bl_doze_hbm = val;
+		}
 
-	rc = dsi_panel_parse_fod_dim_lut(panel, utils);
-	if (rc)
-		pr_err("[%s failed to parse fod dim lut\n", panel->name);
+		rc = dsi_panel_parse_fod_dim_lut(panel, utils);
+		if (rc)
+			pr_err("[%s failed to parse fod dim lut\n", panel->name);
+	}
 #endif
 
 	if (panel->bl_config.type == DSI_BACKLIGHT_PWM) {
