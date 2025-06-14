@@ -10,3 +10,22 @@ bool uses_kernel_dimming(void);
 #else
 static inline bool uses_kernel_dimming(void) { return false; }
 #endif
+
+// Devices
+static inline bool is_device_c3j(void)
+{
+#ifdef CONFIG_MACH_XIAOMI_C3J
+    return true;
+#else
+    return false;
+#endif
+}
+
+static inline bool is_device_f9s(void)
+{
+#ifdef CONFIG_MACH_XIAOMI_F9S
+    return true;
+#else
+    return false;
+#endif
+}
