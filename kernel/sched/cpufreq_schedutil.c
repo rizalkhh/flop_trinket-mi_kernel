@@ -183,7 +183,7 @@ static void sugov_update_commit(struct sugov_policy *sg_policy, u64 time,
 		for_each_cpu(cpu, policy->cpus) {
 			trace_cpu_frequency(next_freq, cpu);
 		}
-	} else if (!sg_policy->work_in_progress) {
+	} else {
 		if (use_pelt())
 			sg_policy->work_in_progress = true;
 		irq_work_queue(&sg_policy->irq_work);
@@ -242,7 +242,7 @@ static void sugov_get_util(unsigned long *util, unsigned long *max, int cpu,
 
 	*util = boosted_cpu_util(cpu, &loadcpu->walt_load);
 
-	if (use_pelt()) {
+	if (likely(use_pelt())) {
 		sched_avg_update(rq);
 		delta = time - rq->age_stamp;
 		if (unlikely(delta < 0))
