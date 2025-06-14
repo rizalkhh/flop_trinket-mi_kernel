@@ -43,6 +43,7 @@
 #include "sde_core_perf.h"
 #include "sde_trace.h"
 #include "dsi_display.h"
+#include <linux/workarounds.h>
 
 #define SDE_PSTATES_MAX (SDE_STAGE_MAX * 4)
 #define SDE_MULTIRECT_PLANE_MAX (SDE_STAGE_MAX * 2)
@@ -5376,16 +5377,18 @@ static int sde_crtc_global_dim_atomic_check(struct sde_crtc_state *cstate,
 	 * at this stage so it will dim only layers below FOD layer.
 	 * FOD and all above layers will not be dimmed.
 	 */
-	for (i = 0; i < cnt; i++)
-		if (sde_plane_is_fod_layer(pstates[i].drm_pstate))
-			break;
+	if (is_device_f9s() && uses_kernel_dimming()) {
+		for (i = 0; i < cnt; i++)
+			if (sde_plane_is_fod_layer(pstates[i].drm_pstate))
+				break;
 
-	if (i < cnt) {
-		type = MSM_DIM_LAYER_FOD;
-		/* Get alpha value for FOD dim layer type */
-		rc = sde_crtc_get_dim_layer_alpha(cstate, type, &alpha);
-		/* Save FOD layer stage */
-		stage = pstates[i].stage;
+		if (i < cnt) {
+			type = MSM_DIM_LAYER_FOD;
+			/* Get alpha value for FOD dim layer type */
+			rc = sde_crtc_get_dim_layer_alpha(cstate, type, &alpha);
+			/* Save FOD layer stage */
+			stage = pstates[i].stage;
+		}
 	}
 
 	/* If FOD layer is not provided by userspace or FOD dim layer type is

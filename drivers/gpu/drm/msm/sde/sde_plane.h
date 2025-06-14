@@ -26,6 +26,7 @@
 #include "sde_hw_mdss.h"
 #include "sde_hw_rot.h"
 #include "sde_hw_sspp.h"
+#include <linux/workarounds.h>
 
 /**
  * struct sde_plane_rot_state - state of pre-sspp rotator stage
