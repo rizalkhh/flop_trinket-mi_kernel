@@ -195,6 +195,7 @@ unsigned int is_legacy_timestamp(void)
 	return legacy_timestamp_source;
 }
 
+#ifdef CONFIG_MACH_XIAOMI_F9S
 /* Workaround: no_kernel_dimming */
 static bool no_kernel_dimming = false;
 
@@ -214,6 +215,7 @@ bool uses_kernel_dimming(void)
 {
 	return !no_kernel_dimming;
 }
+#endif
 
 /* Workaround: dead_modem */
 static bool dead_modem = false;
@@ -779,8 +781,10 @@ asmlinkage __visible void __init start_kernel(void)
 			uname_bpf_spoof ? "enabled" : "disabled");
 	pr_info("Workaround: legacy_ir_hal=%s\n",
 			legacy_ir_hal ? "enabled" : "disabled");
+#ifdef CONFIG_MACH_XIAOMI_F9S
 	pr_info("Workaround: no_kernel_dimming=%s\n",
 			no_kernel_dimming ? "enabled" : "disabled");
+#endif
 	pr_info("Workaround: dead_modem=%s\n",
 			dead_modem ? "enabled" : "disabled");
 
