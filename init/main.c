@@ -777,6 +777,12 @@ asmlinkage __visible void __init start_kernel(void)
 			legacy_timestamp_source ? "enabled" : "disabled");
 	pr_info("Workaround: uname_bpf_spoof=%s\n",
 			uname_bpf_spoof ? "enabled" : "disabled");
+	pr_info("Workaround: legacy_ir_hal=%s\n",
+			legacy_ir_hal ? "enabled" : "disabled");
+	pr_info("Workaround: no_kernel_dimming=%s\n",
+			no_kernel_dimming ? "enabled" : "disabled");
+	pr_info("Workaround: dead_modem=%s\n",
+			dead_modem ? "enabled" : "disabled");
 
 	/*
 	 * These use large bootmem allocations and must precede
