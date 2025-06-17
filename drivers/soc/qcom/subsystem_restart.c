@@ -40,6 +40,7 @@
 #include <linux/of.h>
 #include <asm/current.h>
 #include <linux/timer.h>
+#include <linux/workarounds.h>
 
 #include "peripheral-loader.h"
 
@@ -1264,6 +1265,13 @@ int subsystem_restart_dev(struct subsys_device *dev)
 
 	pr_info("Restart sequence requested for %s, restart_level = %s.\n",
 		name, restart_levels[dev->restart_level]);
+
+	if (is_modem_dead() && !strcmp(name, "modem")) {
+		pr_warn("Workaround: Modem is marked as dead, IGNORING restart request!\n");
+		module_put(dev->owner);
+		put_device(&dev->dev);
+		return 0;
+	}
 
 	if (disable_restart_work == DISABLE_SSR) {
 		pr_warn("subsys-restart: Ignoring restart request for %s\n",
