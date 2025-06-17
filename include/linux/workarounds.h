@@ -7,6 +7,7 @@ bool is_bpf_spoof_enabled(void);
 bool always_warm_reboot(void);
 bool msm_perf_disabled(void);
 bool is_using_legacy_ir_hal(void);
+bool is_modem_dead(void);
 
 #ifdef CONFIG_MACH_XIAOMI_F9S
 bool uses_kernel_dimming(void);
