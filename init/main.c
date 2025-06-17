@@ -215,6 +215,26 @@ bool uses_kernel_dimming(void)
 	return !no_kernel_dimming;
 }
 
+/* Workaround: dead_modem */
+static bool dead_modem = false;
+
+static int __init set_dead_modem(char *val)
+{
+	int tmp = dead_modem;
+
+	if (get_option(&val, &tmp)) {
+		dead_modem = tmp != 0;
+	}
+
+	return 0;
+}
+__setup("dead_modem=", set_dead_modem);
+
+bool is_modem_dead(void)
+{
+	return dead_modem;
+}
+
 /* Hacks */
 static bool init_protection = true;
 
