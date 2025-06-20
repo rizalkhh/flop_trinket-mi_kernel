@@ -10,10 +10,6 @@ struct schedtune {
 	/* Boost value for tasks on that SchedTune CGroup */
 	int boost;
 
-	/* Overriden boost value with identical functionalities for scheduler
-	 * boosting */
-	int boost_override;
-
 #ifdef CONFIG_SCHED_WALT
 	/* Toggle ability to override sched boost enabled */
 	bool sched_boost_no_override;
@@ -42,10 +38,6 @@ struct schedtune {
 	/* Hint to bias scheduling of tasks on that SchedTune CGroup
 	 * towards higher capacity CPUs */
 	bool prefer_high_cap;
-
-	/* Overriden value of prefer_high_cap with identical functionalities
-	 * for boosting */
-	bool prefer_high_cap_override;
 };
 
 #ifdef CONFIG_SCHED_TUNE
