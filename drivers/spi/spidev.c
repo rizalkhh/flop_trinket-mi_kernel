@@ -868,11 +868,21 @@ static int spidev_probe(struct spi_device *spi)
 	minor = find_first_zero_bit(minors, N_SPI_MINORS);
 	if (minor < N_SPI_MINORS) {
 		struct device *dev;
+		int bus_num_for_devnode = spi->master->bus_num;
+
+#ifdef CONFIG_MACH_XIAOMI_C3J
+		if (spi->dev.of_node &&
+			of_device_is_compatible(spi->dev.of_node, "xiaomi,ginkgo-ir-spidev")) {
+			dev_info(&spi->dev, "spidev: Faking bus 0 for legacy Ginkgo IR (real bus %d)\n",
+				 spi->master->bus_num);
+			bus_num_for_devnode = 0;
+		}
+#endif
 
 		spidev->devt = MKDEV(SPIDEV_MAJOR, minor);
 		dev = device_create(spidev_class, &spi->dev, spidev->devt,
 				    spidev, "spidev%d.%d",
-				    spi->master->bus_num, spi->chip_select);
+				    bus_num_for_devnode, spi->chip_select);
 		status = PTR_ERR_OR_ZERO(dev);
 	} else {
 		dev_dbg(&spi->dev, "no minor number available!\n");
