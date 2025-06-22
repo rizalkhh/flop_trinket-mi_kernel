@@ -254,7 +254,6 @@ int clk_alpha_pll_configure(struct clk_alpha_pll *pll, struct regmap *regmap,
 	mask |= config->post_div_mask;
 	mask |= config->vco_mask;
 	mask |= config->alpha_en_mask;
-	mask |= config->alpha_mode_mask;
 
 	if (config->main_output_mask || config->aux_output_mask ||
 		config->aux2_output_mask || config->early_output_mask ||
