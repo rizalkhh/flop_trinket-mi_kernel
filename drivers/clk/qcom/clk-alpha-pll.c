@@ -246,9 +246,15 @@ int clk_alpha_pll_configure(struct clk_alpha_pll *pll, struct regmap *regmap,
 	regmap_write(regmap, pll->offset + PLL_ALPHA_VAL, config->alpha);
 	regmap_write(regmap, pll->offset + PLL_ALPHA_VAL_U, config->alpha_u);
 
-	if (config->config_ctl_val)
-		regmap_write(regmap, pll->offset + PLL_CONFIG_CTL,
-				config->config_ctl_val);
+	mask = config->main_output_mask;
+	mask |= config->aux_output_mask;
+	mask |= config->aux2_output_mask;
+	mask |= config->early_output_mask;
+	mask |= config->pre_div_mask;
+	mask |= config->post_div_mask;
+	mask |= config->vco_mask;
+	mask |= config->alpha_en_mask;
+	mask |= config->alpha_mode_mask;
 
 	if (config->main_output_mask || config->aux_output_mask ||
 		config->aux2_output_mask || config->early_output_mask ||
