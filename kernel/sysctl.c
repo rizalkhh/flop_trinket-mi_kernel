@@ -353,6 +353,14 @@ int proc_dointvec_wrapper(struct ctl_table *table, int write, void *buffer,
 	return proc_dointvec(table, write, buffer, lenp, ppos);
 }
 
+unsigned int dummy_sysctl_sched_boost = 0;
+int dummy_sched_boost_handler(struct ctl_table *table, int write,
+		void __user *buffer, size_t *lenp,
+		loff_t *ppos)
+{
+	return 0;
+}
+
 static struct ctl_table kern_table[] = {
 	{
 		.procname	= "sched_child_runs_first",
@@ -416,6 +424,15 @@ static struct ctl_table kern_table[] = {
 		.extra2		= &three,
 	},
 #endif
+	{
+		.procname	= "sched_boost",
+		.data		= &dummy_sysctl_sched_boost,
+		.maxlen		= sizeof(unsigned int),
+		.mode		= 0644,
+		.proc_handler	= dummy_sched_boost_handler,
+		.extra1		= &neg_three,
+		.extra2		= &three,
+	},
 	{
 		.procname	= "sched_conservative_pl",
 		.data		= &sysctl_sched_conservative_pl,
