@@ -1255,8 +1255,6 @@ SYSCALL_DEFINE1(newuname, struct new_utsname __user *, name)
 		return -EFAULT;
 	if (override_architecture(name))
 		return -EFAULT;
-	if (override_version(name))
-		return -EFAULT;
 	return 0;
 }
 
