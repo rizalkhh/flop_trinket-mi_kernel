@@ -567,12 +567,12 @@ static irqreturn_t wdog_bark_handler(int irq, void *dev_id)
 	if (wdog_dd->do_ipi_ping)
 		dump_cpu_alive_mask(wdog_dd);
 
-#ifdef CONFIG_PREEMPT_RT_FULL
-	panic("Watchdog bite - performing kernel panic!");
-#else
-	msm_trigger_wdog_bite();
-	panic("Failed to cause a watchdog bite! - Falling back to kernel panic!");
-#endif
+// #ifdef CONFIG_PREEMPT_RT_FULL
+// 	panic("Watchdog bite - performing kernel panic!");
+// #else
+// 	msm_trigger_wdog_bite();
+// 	panic("Failed to cause a watchdog bite! - Falling back to kernel panic!");
+// #endif
 	return IRQ_HANDLED;
 }
 
