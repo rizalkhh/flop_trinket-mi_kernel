@@ -240,12 +240,12 @@
 	};
 
 	rpm-regulator-ldoa12 {
-		status = "okay";
+		status = "disabled";
 		L12A: pm6125_l12: regulator-l12 {
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1996000>;
 			qcom,init-voltage = <1800000>;
-			status = "okay";
+			status = "disabled";
 		};
 	};
 
