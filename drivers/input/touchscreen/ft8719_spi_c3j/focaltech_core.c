@@ -1404,15 +1404,15 @@ put_regulator:
 
 int32_t fts_ts_enable_regulator(bool en)
 {
-	static bool status = false;
+	static bool status;
 	int32_t ret = 0;
+	bool old_status = status;
 	struct fts_ts_data *ts_data = fts_data;
 
 	if (status == en) {
 		FTS_INFO("Already %s touch regulator", en?"enable":"disable");
 		return 0;
 	}
-	status = en;
 	FTS_INFO("%s touch regulator", en?"enable":"disable");
 
 	if (!en) {
@@ -1443,6 +1443,7 @@ int32_t fts_ts_enable_regulator(bool en)
 		}
 	}
 
+	status = en;
 	return 0;
 
 disable_ibb_regulator:
@@ -1458,6 +1459,8 @@ disable_vdd_regulator:
 		regulator_disable(ts_data->pwr_vdd);
 
 exit:
+	if (ret && old_status != en)
+		status = old_status;
 	return ret;
 }
 

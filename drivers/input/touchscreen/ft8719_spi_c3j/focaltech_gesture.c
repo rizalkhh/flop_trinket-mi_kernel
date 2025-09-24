@@ -398,7 +398,7 @@ int fts_gesture_suspend(struct fts_ts_data *ts_data)
         return -EINVAL;
     }
 
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < 10; i++) {
         fts_write_reg(0xD1, 0xFF);
         fts_write_reg(0xD2, 0xFF);
         fts_write_reg(0xD5, 0xFF);
@@ -406,13 +406,13 @@ int fts_gesture_suspend(struct fts_ts_data *ts_data)
         fts_write_reg(0xD7, 0xFF);
         fts_write_reg(0xD8, 0xFF);
         fts_write_reg(FTS_REG_GESTURE_EN, ENABLE);
-        msleep(1);
+        msleep(2);
         fts_read_reg(FTS_REG_GESTURE_EN, &state);
         if (state == ENABLE)
             break;
     }
 
-    if (i >= 5) {
+    if (i >= 10) {
         FTS_ERROR("Enter into gesture(suspend) fail");
         fts_gesture_data.active = DISABLE;
         return -EIO;
