@@ -669,7 +669,7 @@ post_build() {
     else
         echo -e "\nERROR: Kernel files not found! Compilation failed?"
         echo -e "\nINFO: Uploading log to bashupload.com\n"
-        curl -T log.txt bashupload.com
+        curl -T log.txt bashupload.com || echo "WARNING: Failed to upload log to bashupload.com (ignored)"
         exit 1
     fi
 
@@ -710,7 +710,7 @@ post_build() {
 upload() {
     if [[ "$DO_BASHUP" == "1" ]]; then
     echo -e "\nINFO: Uploading to bashupload.com...\n"
-    curl -T "$ZIP_PATH" bashupload.com; echo
+    curl -T "$ZIP_PATH" bashupload.com || echo "WARNING: Failed to upload build to bashupload.com (ignored)"
     fi
 
     if [[ "$DO_TG" == "1" ]]; then
@@ -720,7 +720,7 @@ upload() {
     fi
     if [[ "$LOG_UPLOAD" == "1" ]]; then
         echo -e "\nINFO: Uploading log to bashupload.com\n"
-        curl -T log.txt bashupload.com
+        curl -T log.txt bashupload.com || echo "WARNING: Failed to upload log to bashupload.com (ignored)"
     fi
     # Delete any leftover zip files
     # rm -f "$WP/FloppyKernel*zip"
