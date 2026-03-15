@@ -255,7 +255,7 @@ elif [ "$DO_SUKI" == "1" ]; then
     CK_TYPE="ReSukiSU"
     CK_TYPE_SHORT="RESKS"
 elif [ "$DO_RKSU" == "1" ]; then
-    CK_TYPE="RKSU"
+    CK_TYPE="RKSU-NOSUS"
     CK_TYPE_SHORT="RKS"
 else
     CK_TYPE="Vanilla"
