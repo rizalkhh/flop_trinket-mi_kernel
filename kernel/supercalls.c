@@ -88,11 +88,14 @@ static int do_get_info(void __user *arg)
 	}
 	
 #ifdef MODULE
-	cmd.flags |= 0x1;
+	cmd.flags |= KSU_GET_INFO_FLAG_LKM;
 #endif
 
 	if (is_manager()) {
-		cmd.flags |= 0x2;
+		cmd.flags |= KSU_GET_INFO_FLAG_MANAGER;
+	}
+	if (ksu_late_loaded) {
+		cmd.flags |= KSU_GET_INFO_FLAG_LATE_LOAD;
 	}
 	cmd.features = KSU_FEATURE_MAX;
 
@@ -117,8 +120,12 @@ static int do_report_event(void __user *arg)
 		static bool post_fs_data_lock = false;
 		if (!post_fs_data_lock) {
 			post_fs_data_lock = true;
-			pr_info("post-fs-data triggered\n");
-			on_post_fs_data();
+			if (ksu_late_loaded) {
+				pr_info("post-fs-data skipped (late load)\n");
+			} else {
+				pr_info("post-fs-data triggered\n");
+				on_post_fs_data();
+			}
 		}
 		break;
 	}
@@ -126,11 +133,15 @@ static int do_report_event(void __user *arg)
 		static bool boot_complete_lock = false;
 		if (!boot_complete_lock) {
 			boot_complete_lock = true;
-			pr_info("boot_complete triggered\n");
-			on_boot_completed();
-#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
-            susfs_is_boot_completed_triggered = true;
-#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
+			if (ksu_late_loaded) {
+				pr_info("boot_complete skipped (late load)\n");
+			} else {
+				pr_info("boot_complete triggered\n");
+				on_boot_completed();
+#ifdef CONFIG_KSU_SUSFS
+        		susfs_start_sdcard_monitor_fn();
+#endif // #ifdef CONFIG_KSU_SUSFS
+			}
 		}
 		break;
 	}
@@ -154,7 +165,7 @@ static int do_set_sepolicy(void __user *arg)
 		return -EFAULT;
 	}
 
-	return handle_sepolicy(cmd.cmd, (void __user *)cmd.arg);
+	return handle_sepolicy((void __user *)cmd.data, cmd.data_len);
 }
 
 static int do_check_safemode(void __user *arg)
@@ -186,7 +197,8 @@ static int do_new_get_allow_list_common(void __user *arg, bool allow)
 	}
 
     if (cmd.count) {
-        arr = kmalloc(sizeof(int) * cmd.count, GFP_KERNEL);
+        // kmalloc_array safely checks for mathematical overflows before allocating
+		arr = kmalloc_array(cmd.count, sizeof(int), GFP_KERNEL);
         if (!arr) {
             return -ENOMEM;
         }
@@ -506,7 +518,6 @@ static int do_manage_mark(void __user *arg)
 	}
 	case KSU_MARK_REFRESH: {
 #ifndef CONFIG_KSU_SUSFS
-		ksu_mark_running_process();
 		pr_info("manage_mark: refreshed running processes\n");
 #else
         pr_info("susfs: cmd: KSU_MARK_REFRESH: do nothing\n");
@@ -734,7 +745,7 @@ static int add_try_umount(void __user *arg)
 				}
 				
 				// walk it! +1 for null terminator
-				user_buf = user_buf + strlen(entry->umountable) + 1;
+				user_buf = (char *)user_buf + strlen(entry->umountable) + 1;
 			}
 			up_read(&mount_list_lock);
 
@@ -865,14 +876,6 @@ int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd,
         }
         if (cmd == CMD_SUSFS_ADD_SUS_PATH_LOOP) {
             susfs_add_sus_path_loop(arg);
-            return 0;
-        }
-        if (cmd == CMD_SUSFS_SET_ANDROID_DATA_ROOT_PATH) {
-            susfs_set_i_state_on_external_dir(arg);
-            return 0;
-        }
-        if (cmd == CMD_SUSFS_SET_SDCARD_ROOT_PATH) {
-            susfs_set_i_state_on_external_dir(arg);
             return 0;
         }
 #endif //#ifdef CONFIG_KSU_SUSFS_SUS_PATH
@@ -1088,29 +1091,6 @@ int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd,
 }
 
 #if defined(KSU_KPROBES_HOOK) && !defined(CONFIG_KSU_SUSFS)
-struct ksu_install_fd_tw {
-	struct callback_head cb;
-	int __user *outp;
-};
-
-static void ksu_install_fd_tw_func(struct callback_head *cb)
-{
-	struct ksu_install_fd_tw *tw = container_of(cb, struct ksu_install_fd_tw, cb);
-	int fd = ksu_install_fd();
-	pr_info("[%d] install ksu fd: %d\n", current->pid, fd);
-
-	if (copy_to_user(tw->outp, &fd, sizeof(fd))) {
-		pr_err("install ksu fd reply err\n");
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 11, 0)
-		close_fd(fd);
-#else
-		__close_fd(current->files, fd);
-#endif
-	}
-
-	kfree(tw);
-}
-
 static int reboot_handler_pre(struct kprobe *p, struct pt_regs *regs)
 {
 	struct pt_regs *real_regs = PT_REAL_REGS(regs);
