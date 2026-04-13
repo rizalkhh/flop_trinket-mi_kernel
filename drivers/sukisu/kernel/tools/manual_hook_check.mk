@@ -16,7 +16,7 @@ define check_ksu_hook_incompatible
   endif
 endef
 
-$(eval $(call check_ksu_hook_incompatible,ksu_vfs_read_hook,$(srctree)/fs/read_write.c))
+# $(eval $(call check_ksu_hook_incompatible,ksu_vfs_read_hook,$(srctree)/fs/read_write.c))
 $(eval $(call check_ksu_hook_incompatible,is_ksu_transition,$(srctree)/security/selinux/hooks.c))
 
 ifeq ($(CONFIG_KSU_MANUAL_HOOK_AUTO_SETUID_HOOK), y)

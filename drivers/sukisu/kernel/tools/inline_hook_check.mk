@@ -16,7 +16,7 @@ define check_ksu_hook_incompatible
     endif
 endef
 
-$(eval $(call check_ksu_hook_incompatible,ksu_vfs_read_hook,$(srctree)/fs/read_write.c))
+# $(eval $(call check_ksu_hook_incompatible,ksu_vfs_read_hook,$(srctree)/fs/read_write.c))
 
 $(eval $(call check_ksu_hook,ksu_handle_setresuid,$(srctree)/kernel/sys.c))
 $(eval $(call check_ksu_hook,ksu_handle_execveat,$(srctree)/fs/exec.c))
