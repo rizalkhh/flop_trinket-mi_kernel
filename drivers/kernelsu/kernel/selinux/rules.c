@@ -221,11 +221,11 @@ out_unlock:
 	 * set_cpus_allowed_ptr() can sleep, use raw_smp_processor_id() to get
 	 * current CPU and bypass preemption checks.
 	 */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 2, 0)
+// #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 2, 0)
 	cpumask_copy(&old_mask, current->cpus_ptr);
-#else
-	cpumask_copy(&old_mask, &current->cpus_allowed);
-#endif
+// #else
+// 	cpumask_copy(&old_mask, &current->cpus_allowed);
+// #endif
 	set_cpus_allowed_ptr(current, cpumask_of(raw_smp_processor_id()));
 	write_lock(lock);
 	preempt_enable();
@@ -753,11 +753,11 @@ int handle_sepolicy(void __user *user_data, u64 data_len)
 	 * set_cpus_allowed_ptr() can sleep, use raw_smp_processor_id() to get
 	 * current CPU and bypass preemption checks.
 	 */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 2, 0)
+// #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 2, 0)
 	cpumask_copy(&old_mask, current->cpus_ptr);
-#else
-	cpumask_copy(&old_mask, &current->cpus_allowed);
-#endif
+// #else
+// 	cpumask_copy(&old_mask, &current->cpus_allowed);
+// #endif
 	set_cpus_allowed_ptr(current, cpumask_of(raw_smp_processor_id()));
 	write_lock(lock);
 	preempt_enable();
