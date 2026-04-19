@@ -49,18 +49,15 @@
 	};
 };
 
-&dsi_panel_pwr_supply {
+&dsi_panel_pwr_supply_samsung {
 	qcom,panel-supply-entry@1 {
-		qcom,supply-name = "panel_ldo";
-		qcom,supply-min-voltage = <1800000>;
-		qcom,supply-max-voltage = <1800000>;
+		qcom,supply-post-on-sleep = <3>;
 	};
+};
 
-	qcom,panel-supply-entry@2 {
-		qcom,supply-name = "panel_iovcc";
-		qcom,supply-min-voltage = <1800000>;
-		qcom,supply-max-voltage = <1800000>;
-		/delete-property/ qcom,supply-post-on-sleep;
+&dsi_panel_pwr_supply_gvo {
+	qcom,panel-supply-entry@1 {
+		qcom,supply-post-on-sleep = <3>;
 	};
 };
 
