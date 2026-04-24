@@ -80,6 +80,7 @@ static struct work_struct stop_input_hook_work;
 #elif defined(CONFIG_KSU_SUSFS)
 DEFINE_STATIC_KEY_TRUE(ksu_is_init_rc_hook_enabled);
 DEFINE_STATIC_KEY_TRUE(ksu_is_input_hook_enabled);
+extern struct static_key_false ksu_init_rc_hook_key_false;
 
 // use define to avoid ifdef
 #define ksu_init_rc_hook ksu_init_rc_hook_key_false
