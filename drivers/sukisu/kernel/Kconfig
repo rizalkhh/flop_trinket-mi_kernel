@@ -80,21 +80,21 @@ config KPM
 	  This option is suitable for scenarios where you need to force KPM to be enabled.
 	  but it may affect system stability.
 
-choice
-	prompt "KernelSU Hooking Method"
-	depends on KSU
-	default KSU_TRACEPOINT_HOOK
-	help
-	  Select the hooking method for KernelSU.
-	  Note: Tracepoint Syscall Redirect hook is only supported for GKI2(5.10+)
+# choice
+# 	prompt "KernelSU Hooking Method"
+# 	depends on KSU
+# 	default KSU_TRACEPOINT_HOOK
+# 	help
+# 	  Select the hooking method for KernelSU.
+# 	  Note: Tracepoint Syscall Redirect hook is only supported for GKI2(5.10+)
 
-config KSU_TRACEPOINT_HOOK
-	bool "Tracepoint Syscall Redirect"
-	help
-	  The standard, upstream method for modern kernels. 
-	  Utilizes GKI tracepoints for syscall redirection. 
-	  The implementation is only for devices with GKI2 support.
-	  Support for kernel 5.10+
+# config KSU_TRACEPOINT_HOOK
+# 	bool "Tracepoint Syscall Redirect"
+# 	help
+# 	  The standard, upstream method for modern kernels.
+# 	  Utilizes GKI tracepoints for syscall redirection.
+# 	  The implementation is only for devices with GKI2 support.
+# 	  Support for kernel 5.10+
 
 # config KSU_MANUAL_HOOK
 # 	bool "Manually hook KernelSU"
@@ -106,14 +106,16 @@ config KSU_TRACEPOINT_HOOK
 
 config KSU_SUSFS
 	bool "SUSFS Inline Hook"
+	depends on KSU
 	depends on THREAD_INFO_IN_TASK
+	default y
 	help
 	  Patch and Enable SUSFS to kernel with KernelSU.
 	  SuSFS Officially support kernel 5.10+
 	  This KSU driver support it for 4.3+ in KSU side, 
 	  But the kernel side susfs compatibility MUST completed by yourself.
 
-endchoice
+# endchoice
 
 menu "KernelSU - Manual Hook Auto hook"
     depends on KSU_MANUAL_HOOK
