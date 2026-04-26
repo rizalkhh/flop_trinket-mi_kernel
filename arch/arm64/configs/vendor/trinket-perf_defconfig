@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm64 4.14.356 Kernel Configuration
+# Linux/arm64 4.14.357 Kernel Configuration
 #
 CONFIG_ARM64=y
 CONFIG_64BIT=y
@@ -5274,14 +5274,13 @@ CONFIG_FSTABDT_DISABLE=y
 #
 # KernelSU
 #
-# CONFIG_KSU is not set
-
-#
-# KernelSU
-#
 
 #
 # KernelSU - SUSFS
+#
+
+#
+# KernelSU
 #
 
 #
