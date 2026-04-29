@@ -144,6 +144,9 @@ FK_VER="v2.0b"
 # Toggles
 USE_CCACHE=1
 
+# Droidspaces support
+DROIDSPACES=1
+
 ## Parse arguments
 DO_KSU=0
 DO_SUKI=0
@@ -600,6 +603,7 @@ build() {
         [[ "$DO_KSU" == "1" ]] && FRAGMENTS="$FRAGMENTS ksu.config"
         [[ "$DO_SUKI" == "1" ]] && FRAGMENTS="$FRAGMENTS sukisu.config"
         [[ "$DO_XXKSU" == "1" ]] && FRAGMENTS="$FRAGMENTS xxksu.config"
+        [ "$DROIDSPACES" = "1" ] && [ "$DO_REGEN" != "1" ] && FRAGMENTS="$FRAGMENTS droidspaces.config"
         if [[ "$CKB_CRASHKEY" == "1" ]]; then
             FRAGMENTS="$FRAGMENTS crash_key.config"
             # Append CrashKey to the ZIP name so these builds are identifiable
