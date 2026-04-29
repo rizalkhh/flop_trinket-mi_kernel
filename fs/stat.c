@@ -23,6 +23,9 @@
 #endif
 
 #include <linux/uaccess.h>
+#ifdef CONFIG_ZEROMOUNT
+#include <linux/zeromount.h>
+#endif
 #include <asm/unistd.h>
 
 /**
@@ -183,6 +186,57 @@ EXPORT_SYMBOL(vfs_statx_fd);
  *
  * 0 will be returned on success, and a -ve error code if unsuccessful.
  */
+
+#ifdef CONFIG_ZEROMOUNT
+static int zeromount_stat_hook(int dfd, const char __user *filename,
+			       struct kstat *stat, unsigned int request_mask,
+			       int flags)
+{
+	char kname[NAME_MAX + 1];
+	long copied;
+
+	if (zm_is_recursive() || !filename)
+		return -ENOENT;
+
+	copied = strncpy_from_user(kname, filename, sizeof(kname));
+	if (copied <= 0 || kname[0] == '\0' || kname[0] == '/')
+		return -ENOENT;
+
+	{
+		char *abs_path = zeromount_build_absolute_path(dfd, kname);
+		char *resolved;
+
+		if (!abs_path)
+			return -ENOENT;
+
+		resolved = zeromount_resolve_path(abs_path);
+		kfree(abs_path);
+		if (!resolved)
+			return -ENOENT;
+
+		{
+			struct path zm_path;
+			int zm_ret;
+
+			zm_enter();
+			zm_ret = kern_path(resolved,
+					   (flags & AT_SYMLINK_NOFOLLOW) ?
+					   0 : LOOKUP_FOLLOW, &zm_path);
+			zm_exit();
+			kfree(resolved);
+			if (zm_ret)
+				return -ENOENT;
+
+			zm_ret = vfs_getattr(&zm_path, stat, request_mask,
+					     (flags & AT_SYMLINK_NOFOLLOW) ?
+					     AT_SYMLINK_NOFOLLOW : 0);
+			path_put(&zm_path);
+			return zm_ret;
+		}
+	}
+}
+#endif
+
 int vfs_statx(int dfd, const char __user *filename, int flags,
 	      struct kstat *stat, u32 request_mask)
 {
@@ -200,6 +254,18 @@ int vfs_statx(int dfd, const char __user *filename, int flags,
 		lookup_flags &= ~LOOKUP_AUTOMOUNT;
 	if (flags & AT_EMPTY_PATH)
 		lookup_flags |= LOOKUP_EMPTY;
+
+#ifdef CONFIG_ZEROMOUNT
+	/* Try ZeroMount hook for relative paths. */
+	if (filename) {
+		int zm_ret;
+
+		zm_ret = zeromount_stat_hook(dfd, filename, stat,
+					     request_mask, flags);
+		if (zm_ret != -ENOENT)
+			return zm_ret;
+	}
+#endif
 
 retry:
 	error = user_path_at(dfd, filename, lookup_flags, &path);
