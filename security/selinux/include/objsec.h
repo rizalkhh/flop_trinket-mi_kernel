@@ -116,6 +116,22 @@ struct netport_security_struct {
 	u8 protocol;			/* transport protocol */
 };
 
+struct sk_security_struct {
+#ifdef CONFIG_NETLABEL
+	enum {				/* NetLabel state */
+		NLBL_UNSET = 0,
+		NLBL_REQUIRE,
+		NLBL_LABELED,
+		NLBL_REQSKB,
+		NLBL_CONNLABELED,
+	} nlbl_state;
+	struct netlbl_lsm_secattr *nlbl_secattr; /* NetLabel sec attributes */
+#endif
+	u32 sid;			/* SID of this object */
+	u32 peer_sid;			/* SID of peer */
+	u16 sclass;			/* sock security class */
+};
+
 struct tun_security_struct {
 	u32 sid;			/* SID for the tun device sockets */
 };
@@ -141,16 +157,5 @@ struct bpf_security_struct {
 struct perf_event_security_struct {
 	u32 sid;  /* SID of perf_event obj creator */
 };
-
-static inline struct inode_security_struct *selinux_inode(
-						const struct inode *inode)
-{
-	return inode->i_security;
-}
-
-static inline struct task_security_struct *selinux_cred(const struct cred *cred)
-{
-	return cred->security;
-}
 
 #endif /* _SELINUX_OBJSEC_H_ */

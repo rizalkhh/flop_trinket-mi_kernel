@@ -878,13 +878,6 @@ struct task_struct {
 	const cpumask_t			*cpus_ptr;
 	cpumask_t			cpus_mask;
 	cpumask_t			cpus_requested;
-#if defined(CONFIG_PREEMPT_COUNT) && defined(CONFIG_SMP)
-	int				migrate_disable;
-	int				migrate_disable_update;
-# ifdef CONFIG_SCHED_DEBUG
-	int				migrate_disable_atomic;
-# endif
-#endif
 
 #ifdef CONFIG_PREEMPT_RCU
 	int				rcu_read_lock_nesting;
@@ -975,8 +968,6 @@ struct task_struct {
 #ifdef CONFIG_CGROUPS
 	/* disallow userland-initiated cgroup migration */
 	unsigned			no_cgroup_migration:1;
-	/* task is frozen/stopped (used by the cgroup freezer) */
-	unsigned			frozen:1;
 #endif
 
 	unsigned long			atomic_flags; /* Flags requiring atomic access. */
