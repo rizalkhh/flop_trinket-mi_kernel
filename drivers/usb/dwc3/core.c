@@ -1827,7 +1827,6 @@ runtime_set_active:
 
 	return 0;
 }
-
 static void dwc3_complete(struct device *dev)
 {
 	struct dwc3	*dwc = dev_get_drvdata(dev);
