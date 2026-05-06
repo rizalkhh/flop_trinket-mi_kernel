@@ -259,7 +259,7 @@ int dsi_display_set_backlight(struct drm_connector *connector,
 	    drm_dev->sde_power_mode == SDE_MODE_DPMS_LP1) {
 		panel->aod_last_bl_lvl = (u32)bl_temp;
 		if (panel->fod_hbm_enabled || panel->fod_backlight_flag) {
-			pr_info("FOD HBM open, skip doze backlight:%u [hbm=%d][fod_bl=%d]\n",
+			pr_debug("FOD HBM open, skip doze backlight:%u [hbm=%d][fod_bl=%d]\n",
 				(u32)bl_temp, panel->fod_hbm_enabled,
 				panel->fod_backlight_flag);
 		} else {
@@ -271,7 +271,7 @@ int dsi_display_set_backlight(struct drm_connector *connector,
 		   drm_dev->sde_power_mode == SDE_MODE_DPMS_LP2) {
 		panel->aod_last_bl_lvl = (u32)bl_temp;
 		if (panel->fod_hbm_enabled || panel->fod_backlight_flag) {
-			pr_info("FOD HBM open, skip doze backlight in lp2\n");
+			pr_debug("FOD HBM open, skip doze backlight in lp2\n");
 		} else {
 			rc = dsi_panel_set_doze_backlight(panel, (u32)bl_temp);
 			if (rc)
@@ -351,18 +351,18 @@ int dsi_display_param_store(struct dsi_display *display, uint32_t param)
 	if (temp > 0) {
 		switch (temp) {
 		case DISPPARAM_DIMMING:
-			pr_info("dimmingon\n");
+			pr_debug("dimmingon\n");
 			break;
 		case BLIGHTNESS_400NIT:
 			panel->fod_backlight_flag = false;
 			if (panel->samsung_flag) {
 				rc = dsi_panel_set_dimming_brightness(
 					panel, HBM_ON_DIMMING_OFF, 1200);
-				pr_info("HBM BLIGHTNESS_400NIT sansumg\n");
+				pr_debug("HBM BLIGHTNESS_400NIT sansumg\n");
 			} else {
 				rc = dsi_panel_set_dimming_brightness(
 					panel, HBM_OFF_DIMMING_OFF, 2800);
-				pr_info("HBM BLIGHTNESS_400NIT gvo\n");
+				pr_debug("HBM BLIGHTNESS_400NIT gvo\n");
 			}
 			panel->fod_backlight_flag = true;
 			break;
@@ -371,11 +371,11 @@ int dsi_display_param_store(struct dsi_display *display, uint32_t param)
 			if (panel->samsung_flag) {
 				rc = dsi_panel_set_dimming_brightness(
 					panel, HBM_OFF_DIMMING_OFF, 950);
-				pr_info("HBM BLIGHTNESS_300NIT sansumg\n");
+				pr_debug("HBM BLIGHTNESS_300NIT sansumg\n");
 			} else {
 				rc = dsi_panel_set_dimming_brightness(
 					panel, HBM_OFF_DIMMING_OFF, 1990);
-				pr_info("HBM BLIGHTNESS_300NIT gvo\n");
+				pr_debug("HBM BLIGHTNESS_300NIT gvo\n");
 			}
 			panel->fod_backlight_flag = true;
 			break;
@@ -384,16 +384,16 @@ int dsi_display_param_store(struct dsi_display *display, uint32_t param)
 			if (panel->samsung_flag) {
 				rc = dsi_panel_set_dimming_brightness(
 					panel, HBM_OFF_DIMMING_OFF, 560);
-				pr_info("HBM HBM_1_3_CMD-258 sansumg\n");
+				pr_debug("HBM HBM_1_3_CMD-258 sansumg\n");
 			} else {
 				rc = dsi_panel_set_dimming_brightness(
 					panel, HBM_OFF_DIMMING_OFF, 1600);
-				pr_info("HBM HBM_1_3_CMD-258 gvo\n");
+				pr_debug("HBM HBM_1_3_CMD-258 gvo\n");
 			}
 			panel->fod_backlight_flag = true;
 			break;
 		case HBM_MONITOR_ON:
-			pr_info("HBM MONITOR ON\n");
+			pr_debug("HBM MONITOR ON\n");
 			if (panel->samsung_flag)
 				rc = dsi_panel_set_dimming_brightness(
 					panel, HBM_ON_DIMMING_ON,
@@ -406,9 +406,9 @@ int dsi_display_param_store(struct dsi_display *display, uint32_t param)
 			break;
 		case HBM_MONITOR_OFF:
 			if (hbm_monotor_finger == 1)
-				pr_info("HBM fod open not close\n");
+				pr_debug("HBM fod open not close\n");
 			else {
-				pr_info("HBM MONITOR OFF\n");
+				pr_debug("HBM MONITOR OFF\n");
 
 				if (panel->last_bl_lvl) {
 					rc = dsi_panel_set_dimming_brightness(
@@ -429,7 +429,7 @@ int dsi_display_param_store(struct dsi_display *display, uint32_t param)
 	temp = param & 0x000F0000;
 	switch (temp) {
 	case DISPPARAM_HBM_FOD_ON:
-		pr_info("hbm fod on\n");
+		pr_debug("hbm fod on\n");
 		panel->fod_hbm_enabled = true;
 		if (panel->samsung_flag) {
 			rc = dsi_panel_set_dimming_brightness(
@@ -445,10 +445,10 @@ int dsi_display_param_store(struct dsi_display *display, uint32_t param)
 		hbm_monotor_finger = 1;
 		break;
 	case DISPPARAM_HBM_FOD2NORM:
-		pr_info("hbm fod to normal mode\n");
+		pr_debug("hbm fod to normal mode\n");
 		break;
 	case DISPPARAM_HBM_FOD_OFF:
-		pr_info("hbm fod off\n");
+		pr_debug("hbm fod off\n");
 		if ((display->drm_dev &&
 		     display->drm_dev->sde_power_mode == SDE_MODE_DPMS_LP1) ||
 		    (display->drm_dev &&
@@ -473,7 +473,7 @@ int dsi_display_param_store(struct dsi_display *display, uint32_t param)
 		break;
 	case DISPPARAM_HBM_OFF:
 		if (hbm_monotor == 0) {
-			pr_info("hbm off\n");
+			pr_debug("hbm off\n");
 			panel->skip_dimming_on = true;
 			if ((display->drm_dev &&
 			     display->drm_dev->sde_power_mode ==
@@ -509,7 +509,7 @@ int dsi_display_param_store(struct dsi_display *display, uint32_t param)
 				}
 			}
 		} else {
-			pr_info("HBM monitor open not close\n");
+			pr_debug("HBM monitor open not close\n");
 		}
 		hbm_monotor_finger = 0;
 		panel->fod_hbm_enabled = false;
@@ -524,7 +524,7 @@ int dsi_display_param_store(struct dsi_display *display, uint32_t param)
 		rc = dsi_panel_set_dimming_brightness(panel,
 						      HBM_OFF_DIMMING_OFF, 0);
 		panel->fod_backlight_flag = true;
-		pr_info("FOD backlight 0\n");
+		pr_debug("FOD backlight 0\n");
 	}
 	temp = param & 0x00F00000;
 	switch (temp) {
@@ -541,14 +541,14 @@ int dsi_display_param_store(struct dsi_display *display, uint32_t param)
 						   ((backlight_delta % 2 == 0) ?
 								    1 :
 								    2);
-			pr_info("backlight resend: last_bl_lvl = %d; resend_backlight = %d\n",
+			pr_debug("backlight resend: last_bl_lvl = %d; resend_backlight = %d\n",
 				panel->last_bl_lvl, resend_backlight);
 			rc = dsi_panel_set_dimming_brightness(
 				panel, HBM_OFF_DIMMING_OFF, resend_backlight);
 		}
 		break;
 	case DISPPARAM_FOD_BACKLIGHT:
-		pr_info("FOD backlight");
+		pr_debug("FOD backlight");
 		break;
 	default:
 		break;
@@ -557,11 +557,11 @@ int dsi_display_param_store(struct dsi_display *display, uint32_t param)
 	temp = param & 0x0F000000;
 	switch (temp) {
 	case DISPPARAM_FOD_BACKLIGHT_ON:
-		pr_info("fod_backlight_flag on\n");
+		pr_debug("fod_backlight_flag on\n");
 		panel->fod_backlight_flag = true;
 		break;
 	case DISPPARAM_FOD_BACKLIGHT_OFF:
-		pr_info("fod_backlight_flag off\n");
+		pr_debug("fod_backlight_flag off\n");
 		panel->fod_backlight_flag = false;
 		break;
 	default:

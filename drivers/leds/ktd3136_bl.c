@@ -203,7 +203,7 @@ void ktd3137_brightness_set_workfunc(struct ktd3137_chip *chip, int brightness)
 
 int sgm_brightness_set(uint16_t brightness)
 {
-	pr_info("[brightness]%s brightness = %d\n", __func__, brightness);
+	pr_debug("[brightness]%s brightness = %d\n", __func__, brightness);
 	if (g_backlight_ic == 1)
 		ktd3137_brightness_set_workfunc(bkl_chip, brightness);
 	else
@@ -218,25 +218,25 @@ int ktd_hbm_set(int hbm_mode)
 	case HBM_MODE_DEFAULT:
 		ktd3137_write_reg(bkl_chip->client, REG_MODE, 0x81);
 		i2c_sgm_write(bkl_chip->client, 0x8, 0x3);
-		pr_err("Turn off hbm mode \n");
+		pr_debug("Turn off hbm mode \n");
 		break;
 	case HBM_MODE_LEVEL1:
 		ktd3137_write_reg(bkl_chip->client, REG_MODE, 0x99);
 		i2c_sgm_write(bkl_chip->client, 0x8, 0x3);
-		pr_err("This is hbm mode 1\n");
+		pr_debug("This is hbm mode 1\n");
 		break;
 	case HBM_MODE_LEVEL2:
 		ktd3137_write_reg(bkl_chip->client, REG_MODE, 0xB1);
 		i2c_sgm_write(bkl_chip->client, 0x8, 0x3);
-		pr_err("This is hbm mode 2\n");
+		pr_debug("This is hbm mode 2\n");
 		break;
 	case HBM_MODE_LEVEL3:
 		ktd3137_write_reg(bkl_chip->client, REG_MODE, 0xC9);
 		i2c_sgm_write(bkl_chip->client, 0x8, 0x3);
-		pr_err("This is hbm mode 3\n");
+		pr_debug("This is hbm mode 3\n");
 		break;
 	default:
-		pr_info("This isn't hbm mode\n");
+		pr_debug("This isn't hbm mode\n");
 		break;
 	}
 
@@ -248,22 +248,22 @@ int lm_hbm_set(int hbm_mode)
 	switch (hbm_mode) {
 	case HBM_MODE_DEFAULT:
 		i2c_sgm_write(bkl_chip->client, 0x18, 0x10);
-		pr_info("Turn off hbm mode \n");
+		pr_debug("Turn off hbm mode \n");
 		break;
 	case HBM_MODE_LEVEL1:
 		i2c_sgm_write(bkl_chip->client, 0x18, 0x13);
-		pr_info("This is hbm mode 1\n");
+		pr_debug("This is hbm mode 1\n");
 		break;
 	case HBM_MODE_LEVEL2:
 		i2c_sgm_write(bkl_chip->client, 0x18, 0x16);
-		pr_info("This is hbm mode 2\n");
+		pr_debug("This is hbm mode 2\n");
 		break;
 	case HBM_MODE_LEVEL3:
 		i2c_sgm_write(bkl_chip->client, 0x18, 0x19);
-		pr_info("This is hbm mode 3\n");
+		pr_debug("This is hbm mode 3\n");
 		break;
 	default:
-		pr_info("This isn't hbm mode\n");
+		pr_debug("This isn't hbm mode\n");
 		break;
 	}
 
@@ -272,7 +272,7 @@ int lm_hbm_set(int hbm_mode)
 
 int backlight_hbm_set(int hbm_mode)
 {
-	pr_info("%s hbm mode = %d\n", __func__, hbm_mode);
+	pr_debug("%s hbm mode = %d\n", __func__, hbm_mode);
 	if (g_backlight_ic == 1)
 		ktd_hbm_set(hbm_mode);
 	else
@@ -334,7 +334,7 @@ static int sgm_probe(struct i2c_client *client,
 	}
 
 	client->addr = 0x36;
-	pr_err("probe start! 1 \n");
+	pr_debug("probe start! 1 \n");
 	chip = devm_kzalloc(&client->dev, sizeof(struct ktd3137_chip),
 				GFP_KERNEL);
 	if (chip == NULL)
@@ -342,7 +342,7 @@ static int sgm_probe(struct i2c_client *client,
 	 
 	pdata = devm_kzalloc(&client->dev, sizeof(*pdata), GFP_KERNEL);
 	if (!pdata) {
-		pr_err("probe start! 2 \n");
+		pr_debug("probe start! 2 \n");
 		return -1;
 	}
 
@@ -359,7 +359,7 @@ static int sgm_probe(struct i2c_client *client,
 	err = sysfs_create_group(&client->dev.kobj, &sgm_attribute_group);
 	
 	err = sgm_init_registers();
-	pr_err("ktd3136 probe err = %d\n", err);
+	pr_debug("ktd3136 probe err = %d\n", err);
 	if (err == 0)
 		i2c_flag = 1;
 	else 
