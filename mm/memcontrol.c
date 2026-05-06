@@ -985,7 +985,6 @@ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
 {
 	struct mem_cgroup_per_node *mz;
 	unsigned long *lru_size;
-	long size;
 
 	if (mem_cgroup_disabled())
 		return;
