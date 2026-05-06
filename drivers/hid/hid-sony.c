@@ -435,7 +435,6 @@ struct motion_output_report_02 {
 #define MOTION_REPORT_0x02_SIZE 49
 
 #define SENSOR_SUFFIX " Motion Sensors"
-#define TOUCHPAD_SUFFIX " Touchpad"
 
 #define SIXAXIS_INPUT_REPORT_ACC_X_OFFSET 41
 #define SIXAXIS_ACC_RES_PER_G 113
@@ -452,7 +451,6 @@ struct sony_sc {
 	spinlock_t lock;
 	struct list_head list_node;
 	struct hid_device *hdev;
-	struct input_dev *touchpad;
 	struct input_dev *sensor_dev;
 	struct led_classdev *leds[MAX_LEDS];
 	unsigned long quirks;
@@ -821,81 +819,6 @@ static int sony_mapping(struct hid_device *hdev, struct hid_input *hi,
 
 	/* Let hid-core decide for the others */
 	return 0;
-}
-
-static int sony_register_touchpad(struct sony_sc *sc, int touch_count,
-					int w, int h)
-{
-	size_t name_sz;
-	char *name;
-	int ret;
-
-	sc->touchpad = input_allocate_device();
-	if (!sc->touchpad)
-		return -ENOMEM;
-
-	input_set_drvdata(sc->touchpad, sc);
-	sc->touchpad->dev.parent = &sc->hdev->dev;
-	sc->touchpad->phys = sc->hdev->phys;
-	sc->touchpad->uniq = sc->hdev->uniq;
-	sc->touchpad->id.bustype = sc->hdev->bus;
-	sc->touchpad->id.vendor = sc->hdev->vendor;
-	sc->touchpad->id.product = sc->hdev->product;
-	sc->touchpad->id.version = sc->hdev->version;
-
-	/* This suffix was originally apended when hid-sony also
-	 * supported DS4 devices. The DS4 was implemented using multiple
-	 * evdev nodes and hence had the need to separete them out using
-	 * a suffix. Other devices which were added later like Sony TV remotes
-	 * inhirited this suffix.
-	 */
-	name_sz = strlen(sc->hdev->name) + sizeof(TOUCHPAD_SUFFIX);
-	name = kzalloc(name_sz, GFP_KERNEL);
-	if (!name) {
-		ret = -ENOMEM;
-		goto err;
-	}
-	snprintf(name, name_sz, "%s" TOUCHPAD_SUFFIX, sc->hdev->name);
-	sc->touchpad->name = name;
-
-	ret = input_mt_init_slots(sc->touchpad, touch_count, INPUT_MT_POINTER);
-	if (ret < 0)
-		goto err;
-
-	/* We map the button underneath the touchpad to BTN_LEFT. */
-	__set_bit(EV_KEY, sc->touchpad->evbit);
-	__set_bit(BTN_LEFT, sc->touchpad->keybit);
-	__set_bit(INPUT_PROP_BUTTONPAD, sc->touchpad->propbit);
-
-	input_set_abs_params(sc->touchpad, ABS_MT_POSITION_X, 0, w, 0, 0);
-	input_set_abs_params(sc->touchpad, ABS_MT_POSITION_Y, 0, h, 0, 0);
-
-	ret = input_register_device(sc->touchpad);
-	if (ret < 0)
-		goto err;
-
-	return 0;
-
-err:
-	kfree(sc->touchpad->name);
-	sc->touchpad->name = NULL;
-
-	input_free_device(sc->touchpad);
-	sc->touchpad = NULL;
-
-	return ret;
-}
-
-static void sony_unregister_touchpad(struct sony_sc *sc)
-{
-	if (!sc->touchpad)
-		return;
-
-	kfree(sc->touchpad->name);
-	sc->touchpad->name = NULL;
-
-	input_unregister_device(sc->touchpad);
-	sc->touchpad = NULL;
 }
 
 static int sony_register_sensors(struct sony_sc *sc)
@@ -1917,8 +1840,6 @@ err_stop:
 		sony_leds_remove(sc);
 	if (sc->quirks & SONY_BATTERY_SUPPORT)
 		sony_battery_remove(sc);
-	if (sc->touchpad)
-		sony_unregister_touchpad(sc);
 	if (sc->sensor_dev)
 		sony_unregister_sensors(sc);
 	sony_cancel_work_sync(sc);
@@ -2004,9 +1925,6 @@ static void sony_remove(struct hid_device *hdev)
 
 	if (sc->quirks & SONY_BATTERY_SUPPORT)
 		sony_battery_remove(sc);
-
-	if (sc->touchpad)
-		sony_unregister_touchpad(sc);
 
 	if (sc->sensor_dev)
 		sony_unregister_sensors(sc);
