@@ -995,7 +995,9 @@ static int show_smap(struct seq_file *m, void *v, int is_pid)
 	/* mmap_sem is held in m_start */
 	walk_page_vma(vma, &smaps_walk);
 
+#ifdef CONFIG_KSU_SUSFS_SUS_MAP
 bypass_orig_flow:
+#endif
 	if (!rollup_mode) {
 		show_map_vma(m, vma, is_pid);
 		if (vma_get_anon_name(vma)) {
@@ -1059,7 +1061,9 @@ bypass_orig_flow:
 		arch_show_smap(m, vma);
 		show_smap_vma_flags(m, vma);
 	}
+#ifdef CONFIG_KSU_SUSFS_SUS_MAP
 out:
+#endif
 	m_cache_vma(m, vma);
 	return ret;
 }
