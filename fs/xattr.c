@@ -24,9 +24,6 @@
 
 #include <linux/uaccess.h>
 #include "internal.h"
-#ifdef CONFIG_ZEROMOUNT
-#include <linux/zeromount.h>
-#endif
 
 static const char *
 strcmp_prefix(const char *a, const char *a_prefix)
@@ -370,12 +367,6 @@ vfs_getxattr(struct dentry *dentry, const char *name, void *value, size_t size)
 	error = security_inode_getxattr(dentry, name);
 	if (error)
 		return error;
-
-#ifdef CONFIG_ZEROMOUNT
-	error = zeromount_spoof_xattr(dentry, name, value, size);
-	if (error != -EOPNOTSUPP)
-		return error;
-#endif
 
 	if (!strncmp(name, XATTR_SECURITY_PREFIX,
 				XATTR_SECURITY_PREFIX_LEN)) {

@@ -22,9 +22,7 @@
 #include <linux/compat.h>
 
 #include <linux/uaccess.h>
-#ifdef CONFIG_ZEROMOUNT
-#include <linux/zeromount.h>
-#endif
+
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 #include <linux/susfs_def.h>
 extern bool susfs_is_inode_sus_path(struct inode *inode);
@@ -306,9 +304,6 @@ SYSCALL_DEFINE3(getdents, unsigned int, fd,
 		.current_dir = dirent
 	};
 	int error;
-#ifdef CONFIG_ZEROMOUNT
-	int initial_count = count;
-#endif
 
 	if (!access_ok(VERIFY_WRITE, dirent, count))
 		return -EFAULT;
@@ -316,14 +311,6 @@ SYSCALL_DEFINE3(getdents, unsigned int, fd,
 	f = fdget_pos(fd);
 	if (!f.file)
 		return -EBADF;
-
-#ifdef CONFIG_ZEROMOUNT
-	if (f.file->f_pos >= ZEROMOUNT_MAGIC_POS) {
-		error = 0;
-		goto skip_real_iterate;
-	}
-#endif
-
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	buf.sb = f.file->f_inode->i_sb;
 #endif
@@ -331,23 +318,6 @@ SYSCALL_DEFINE3(getdents, unsigned int, fd,
 	error = iterate_dir(f.file, &buf.ctx);
 	if (error >= 0)
 		error = buf.error;
-
-#ifdef CONFIG_ZEROMOUNT
-skip_real_iterate:
-	if (error >= 0 && !signal_pending(current)) {
-		void __user *zm_dirent = buf.current_dir;
-		int zm_count = buf.count;
-
-		zeromount_inject_dents(f.file, &zm_dirent, &zm_count,
-				       &f.file->f_pos);
-		if (zm_count != buf.count) {
-			buf.count = zm_count;
-			error = initial_count - buf.count;
-		}
-		goto zm_out;
-	}
-#endif
-
 	lastdirent = buf.previous;
 	if (lastdirent) {
 		if (put_user(buf.ctx.pos, &lastdirent->d_off))
@@ -355,9 +325,6 @@ skip_real_iterate:
 		else
 			error = count - buf.count;
 	}
-#ifdef CONFIG_ZEROMOUNT
-zm_out:
-#endif
 	fdput_pos(f);
 	return error;
 }
@@ -444,9 +411,6 @@ SYSCALL_DEFINE3(getdents64, unsigned int, fd,
 		.current_dir = dirent
 	};
 	int error;
-#ifdef CONFIG_ZEROMOUNT
-	int initial_count = count;
-#endif
 
 	if (!access_ok(VERIFY_WRITE, dirent, count))
 		return -EFAULT;
@@ -454,37 +418,12 @@ SYSCALL_DEFINE3(getdents64, unsigned int, fd,
 	f = fdget_pos(fd);
 	if (!f.file)
 		return -EBADF;
-
-#ifdef CONFIG_ZEROMOUNT
-	if (f.file->f_pos >= ZEROMOUNT_MAGIC_POS) {
-		error = 0;
-		goto skip_real_iterate;
-	}
-#endif
-
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	buf.sb = f.file->f_inode->i_sb;
 #endif
 	error = iterate_dir(f.file, &buf.ctx);
 	if (error >= 0)
 		error = buf.error;
-
-#ifdef CONFIG_ZEROMOUNT
-skip_real_iterate:
-	if (error >= 0 && !signal_pending(current)) {
-		void __user *zm_dirent = buf.current_dir;
-		int zm_count = buf.count;
-
-		zeromount_inject_dents64(f.file, &zm_dirent, &zm_count,
-					 &f.file->f_pos);
-		if (zm_count != buf.count) {
-			buf.count = zm_count;
-			error = initial_count - buf.count;
-		}
-		goto zm_out;
-	}
-#endif
-
 	lastdirent = buf.previous;
 	if (lastdirent) {
 		typeof(lastdirent->d_off) d_off = buf.ctx.pos;
@@ -493,9 +432,6 @@ skip_real_iterate:
 		else
 			error = count - buf.count;
 	}
-#ifdef CONFIG_ZEROMOUNT
-zm_out:
-#endif
 	fdput_pos(f);
 	return error;
 }
@@ -685,9 +621,6 @@ COMPAT_SYSCALL_DEFINE3(getdents, unsigned int, fd,
 		.count = count
 	};
 	int error;
-#ifdef CONFIG_ZEROMOUNT
-	int initial_count = count;
-#endif
 
 	if (!access_ok(VERIFY_WRITE, dirent, count))
 		return -EFAULT;
@@ -695,14 +628,6 @@ COMPAT_SYSCALL_DEFINE3(getdents, unsigned int, fd,
 	f = fdget_pos(fd);
 	if (!f.file)
 		return -EBADF;
-
-#ifdef CONFIG_ZEROMOUNT
-	if (f.file->f_pos >= ZEROMOUNT_MAGIC_POS) {
-		error = 0;
-		goto skip_real_iterate;
-	}
-#endif
-
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	buf.sb = f.file->f_inode->i_sb;
 #endif
@@ -710,21 +635,6 @@ COMPAT_SYSCALL_DEFINE3(getdents, unsigned int, fd,
 	error = iterate_dir(f.file, &buf.ctx);
 	if (error >= 0)
 		error = buf.error;
-#ifdef CONFIG_ZEROMOUNT
-skip_real_iterate:
-	if (error >= 0 && !signal_pending(current)) {
-		void __user *zm_dirent = buf.current_dir;
-		int zm_count = buf.count;
-
-		zeromount_inject_dents(f.file, &zm_dirent, &zm_count,
-				       &f.file->f_pos);
-		if (zm_count != buf.count) {
-			buf.count = zm_count;
-			error = initial_count - buf.count;
-		}
-		goto zm_out;
-	}
-#endif
 	lastdirent = buf.previous;
 	if (lastdirent) {
 		if (put_user(buf.ctx.pos, &lastdirent->d_off))
@@ -732,9 +642,6 @@ skip_real_iterate:
 		else
 			error = count - buf.count;
 	}
-#ifdef CONFIG_ZEROMOUNT
-zm_out:
-#endif
 	fdput_pos(f);
 	return error;
 }
