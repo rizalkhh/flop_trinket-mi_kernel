@@ -86,11 +86,12 @@ fi
 
 # Build all variants for each device before moving to the next
 for device_name in "${devices_to_process[@]}"; do
-    # RKSU Build
-    if $u_param; then
-        rksu_opts="${build_opts//k/}"  # Remove KernelSU flag for RKSU builds
-        rksu_opts="${rksu_opts//s/}"   # Remove SukiSU flag if present
-        run_build "$device_name" "$rksu_opts"
+
+    # KernelSU Build
+    if $k_param; then
+        ksu_opts="${build_opts//s/}"  # Remove SukiSU flag for KernelSU builds
+        ksu_opts="${ksu_opts//u/}"   # Also remove RKSU flag if present
+        run_build "$device_name" "$ksu_opts"
     fi
 
     # SukiSU Build
@@ -100,11 +101,11 @@ for device_name in "${devices_to_process[@]}"; do
         run_build "$device_name" "$suki_opts"
     fi
 
-    # KernelSU Build
-    if $k_param; then
-        ksu_opts="${build_opts//s/}"  # Remove SukiSU flag for KernelSU builds
-        ksu_opts="${ksu_opts//u/}"   # Also remove RKSU flag if present
-        run_build "$device_name" "$ksu_opts"
+    # RKSU Build
+    if $u_param; then
+        rksu_opts="${build_opts//k/}"  # Remove KernelSU flag for RKSU builds
+        rksu_opts="${rksu_opts//s/}"   # Remove SukiSU flag if present
+        run_build "$device_name" "$rksu_opts"
     fi
 
     # Vanilla Build
