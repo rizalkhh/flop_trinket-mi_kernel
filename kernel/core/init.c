@@ -30,6 +30,7 @@
 #include "feature/dynamic_manager.h"
 #include "feature/sucompat.h"
 #include "hook/setuid_hook.h"
+#include "compat/kernel_compat.h"
 
 #ifdef CONFIG_ARM64
 #include "compat/apatch_conflict.h"
@@ -95,7 +96,7 @@ static inline void ksu_hook_init(void)
     ksu_syscall_hook_manager_init();
 #elif defined(CONFIG_KSU_MANUAL_HOOK)
 // only lsm hook need call init
-#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 8, 0) && LINUX_VERSION_CODE >= KERNEL_VERSION(4, 2, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 8, 0)
     ksu_lsm_hook_init();
 #endif
 #elif defined(CONFIG_KSU_SUSFS)
@@ -118,6 +119,14 @@ static inline void ksu_hook_exit(void)
 #endif
 }
 
+void setup_ksu_cred(void)
+{
+    setup_ksu_cred_selinux();
+#ifdef KSU_COMPAT_REQUIRE_SESSION_KEYRING
+    setup_ksu_cred_session_keyring();
+#endif
+}
+
 #ifdef CONFIG_KSU_DEBUG
 bool allow_shell = true;
 #else
@@ -127,6 +136,17 @@ bool allow_shell = false;
 int __init kernelsu_init(void)
 {
     pr_info("Initialized on: %s (%s) with driver version: %u\n", UTS_RELEASE, UTS_MACHINE, KSU_VERSION);
+#if defined(KSU_COMPAT_NON_EXPORTED_POLICY_RWLOCK) || defined(KSU_COMPAT_NON_EXPORTED_SEL_MUTEX)
+    pr_alert("*************************************************************");
+    pr_alert("**     NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE    **");
+    pr_alert("**                                                         **");
+    pr_alert("**          Enable Unsafe memory access for SELinux        **");
+    pr_alert("**                You maybe face Kernel Panic              **");
+    pr_alert("**                                                         **");
+    pr_alert("**     NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE    **");
+    pr_alert("*************************************************************");
+#endif
+
 #ifdef MODULE
     ksu_late_loaded = (current->pid != 1);
 #else
@@ -206,7 +226,7 @@ int __init kernelsu_init(void)
         ksu_file_wrapper_init();
 
         ksu_boot_completed = true;
-        track_throne(false, true, false);
+        track_throne(TRACK_THRONE_FORCE_SEARCH_MGR);
 
         if (!getenforce()) {
             pr_info("Permissive SELinux, enforcing\n");
