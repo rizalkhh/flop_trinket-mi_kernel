@@ -19,6 +19,7 @@
 
 #include <linux/firmware.h>
 #include <linux/gpio.h>
+#include <linux/vmalloc.h>
 
 #include "nt36xxx.h"
 
@@ -39,6 +40,11 @@ struct timeval start, end;
 const struct firmware *fw_entry = NULL;
 static size_t fw_need_write_size = 0;
 static uint8_t *fwbuf = NULL;
+static struct firmware cached_fw_entry;
+static u8 *cached_fw_data;
+static size_t cached_fw_size;
+static char cached_fw_name[FIRMWARE_NAME_LEN];
+static bool fw_entry_is_cached;
 
 struct nvt_ts_bin_map {
 	char name[12];
@@ -286,10 +292,55 @@ return:
 static void update_firmware_release(void)
 {
 	if (fw_entry) {
-		release_firmware(fw_entry);
+		if (!fw_entry_is_cached)
+			release_firmware(fw_entry);
 	}
 
 	fw_entry = NULL;
+	fw_entry_is_cached = false;
+}
+
+static int32_t nvt_cache_firmware(const char *filename,
+				  const struct firmware *fw)
+{
+	u8 *data;
+
+	if (!filename || !fw || !fw->data || !fw->size)
+		return -EINVAL;
+
+	data = vmalloc(fw->size);
+	if (!data)
+		return -ENOMEM;
+
+	memcpy(data, fw->data, fw->size);
+
+	if (cached_fw_data)
+		vfree(cached_fw_data);
+
+	cached_fw_data = data;
+	cached_fw_size = fw->size;
+	strscpy(cached_fw_name, filename, sizeof(cached_fw_name));
+	NVT_LOG("cached firmware image, size=%zu\n", cached_fw_size);
+
+	return 0;
+}
+
+static int32_t nvt_use_cached_firmware(char *filename)
+{
+	if (!cached_fw_data || !cached_fw_size)
+		return -ENOENT;
+
+	if (strcmp(cached_fw_name, filename))
+		return -ENOENT;
+
+	cached_fw_entry.data = cached_fw_data;
+	cached_fw_entry.size = cached_fw_size;
+	fw_entry = &cached_fw_entry;
+	fw_entry_is_cached = true;
+
+	NVT_LOG("using cached firmware image for %s\n", filename);
+
+	return 0;
 }
 
 /*******************************************************
@@ -303,6 +354,7 @@ static int32_t update_firmware_request(char *filename)
 {
 	uint8_t retry = 0;
 	int32_t ret = 0;
+	bool using_cache = false;
 
 	if (NULL == filename) {
 		return -ENOENT;
@@ -311,10 +363,16 @@ static int32_t update_firmware_request(char *filename)
 	while (1) {
 		NVT_LOG("filename is %s\n", filename);
 
-		ret = request_firmware(&fw_entry, filename, &ts->client->dev);
-		if (ret) {
-			NVT_ERR("firmware load failed, ret=%d\n", ret);
-			goto request_fail;
+		ret = nvt_use_cached_firmware(filename);
+		if (!ret) {
+			using_cache = true;
+		} else {
+			ret = request_firmware(&fw_entry, filename, &ts->client->dev);
+			if (ret) {
+				NVT_ERR("firmware load failed, ret=%d\n", ret);
+				goto request_fail;
+			}
+			using_cache = false;
 		}
 
 		// check FW need to write size
@@ -338,6 +396,12 @@ static int32_t update_firmware_request(char *filename)
 			NVT_ERR("bin header parser failed\n");
 			goto invalid;
 		} else {
+			if (!using_cache) {
+				ret = nvt_cache_firmware(filename, fw_entry);
+				if (ret)
+					NVT_ERR("cache firmware failed, ret=%d\n", ret);
+				ret = 0;
+			}
 			break;
 		}
 
@@ -350,10 +414,11 @@ invalid:
 
 request_fail:
 		retry++;
-		if(unlikely(retry > 2)) {
+		if (unlikely(retry > 4)) {
 			NVT_ERR("error, retry=%d\n", retry);
 			break;
 		}
+		msleep(50);
 	}
 
 	return ret;
