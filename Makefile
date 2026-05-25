@@ -919,7 +919,7 @@ endif
 
 ifdef CONFIG_LTO_CLANG
 ifdef CONFIG_THINLTO
-lto-clang-flags	:= -flto=thin -fsplit-lto-unit $(call cc-option,-funified-lto)
+lto-clang-flags	:= -flto=thin -fno-split-lto-unit $(call cc-option,-funified-lto)
 
 # LLVM tunings
 LDFLAGS += -mllvm -inline-threshold=500
