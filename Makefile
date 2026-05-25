@@ -922,7 +922,10 @@ ifdef CONFIG_THINLTO
 lto-clang-flags	:= -flto=thin -fsplit-lto-unit $(call cc-option,-funified-lto)
 
 # LLVM tunings
-KBUILD_LDFLAGS += -mllvm -inline-threshold=500
+LDFLAGS += -mllvm -inline-threshold=500
+LDFLAGS += --plugin-opt=-import-hot-multiplier=2
+LDFLAGS += --plugin-opt=-import-instr-limit=80
+KBUILD_CFLAGS += -mllvm -unroll-threshold=600
 else
 lto-clang-flags	:= -flto
 endif
