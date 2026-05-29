@@ -33,6 +33,7 @@
 #include <linux/sched/topology.h>
 #include <linux/sched/sysctl.h>
 #include <linux/binfmts.h>
+#include <linux/workqueue.h>
 
 #include <trace/events/power.h>
 
@@ -717,6 +718,21 @@ static ssize_t show_scaling_cur_freq(struct cpufreq_policy *policy, char *buf)
 static int cpufreq_set_policy(struct cpufreq_policy *policy,
 				struct cpufreq_policy *new_policy);
 
+static int boost_expire_ms = 3000;
+static void reset_min_freq_handler(struct work_struct *work)
+{
+	struct cpufreq_policy *policy = cpufreq_cpu_get(0);
+	if (policy) {
+		struct cpufreq_policy new_policy;
+		memcpy(&new_policy, policy, sizeof(*policy));
+		new_policy.min = 864000;
+		if (!cpufreq_set_policy(policy, &new_policy))
+			policy->user_policy.min = 864000;
+		cpufreq_cpu_put(policy);
+	}
+}
+static DECLARE_DELAYED_WORK(reset_min_freq_work, reset_min_freq_handler);
+
 /**
  * cpufreq_per_cpu_attr_write() / store_##file_name() - sysfs write access
  */
@@ -746,6 +762,9 @@ static ssize_t store_##file_name					\
 	ret = cpufreq_set_policy(policy, &new_policy);		\
 	if (!ret)							\
 		policy->user_policy.object = temp;			\
+									\
+	if (!ret && &policy->object == &policy->min && temp == 1305600 && policy->cpu == 0) \
+		schedule_delayed_work(&reset_min_freq_work, msecs_to_jiffies(boost_expire_ms)); \
 									\
 	return ret ? ret : count;					\
 }
