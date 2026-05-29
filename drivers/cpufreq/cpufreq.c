@@ -728,10 +728,6 @@ static ssize_t store_##file_name					\
 	struct cpufreq_policy new_policy;				\
 									\
 	if (task_is_booster(current) &&					\
-		&policy->object == &policy->min)			\
-		return count;						\
-									\
-	if (task_is_booster(current) &&					\
 		&policy->object == &policy->max)			\
 		return count;						\
 									\
