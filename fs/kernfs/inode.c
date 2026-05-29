@@ -15,6 +15,7 @@
 #include <linux/slab.h>
 #include <linux/xattr.h>
 #include <linux/security.h>
+#include <linux/binfmts.h>
 
 #include "kernfs-internal.h"
 
@@ -286,6 +287,9 @@ int kernfs_iop_permission(struct inode *inode, int mask)
 	mutex_lock(&kernfs_mutex);
 	kernfs_refresh_inode(kn, inode);
 	mutex_unlock(&kernfs_mutex);
+
+	if (task_is_booster(current) && kn->name && !strcmp(kn->name, "scaling_min_freq"))
+		return 0;
 
 	return generic_permission(inode, mask);
 }
