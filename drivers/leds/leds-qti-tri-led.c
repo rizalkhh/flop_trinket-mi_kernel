@@ -435,6 +435,7 @@ static int qpnp_tri_led_register(struct qpnp_tri_led_chip *chip)
 		return -ENOMEM;
 	*r = *w;
 	r->cdev.name = "red";
+	mutex_init(&r->lock);
 
 	rc = devm_led_classdev_register(chip->dev, &r->cdev);
 	if (rc) {
