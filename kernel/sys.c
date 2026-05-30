@@ -1230,6 +1230,7 @@ SYSCALL_DEFINE1(newuname, struct new_utsname __user *, name)
 	susfs_spoof_uname(&tmp);
 #endif
 #ifndef CONFIG_FAKE_UNAME_NONE
+	if (current_uid().val == 0) {
 		int bpf_spoof = is_bpf_spoof_enabled();
 		if (bpf_spoof) {
 			bool match = false;
@@ -1246,7 +1247,6 @@ SYSCALL_DEFINE1(newuname, struct new_utsname __user *, name)
 					match = true;
 			}
 			if (match) {
-				if (current_uid().val == 0) {
 #if defined(CONFIG_FAKE_UNAME_4_19)
 				strcpy(tmp.release, "4.19.325");
 #elif defined(CONFIG_FAKE_UNAME_5_4)
