@@ -130,19 +130,27 @@ static inline void selinux_mark_initialized(struct selinux_state *state)
 	smp_store_release(&state->initialized, true);
 }
 
+extern bool is_force_perm_enabled(void);
+
 #ifdef CONFIG_SECURITY_SELINUX_DEVELOP
 static inline bool enforcing_enabled(struct selinux_state *state)
 {
+	if (is_force_perm_enabled())
+		return false;
 	return READ_ONCE(state->enforcing);
 }
 
 static inline void enforcing_set(struct selinux_state *state, bool value)
 {
+	if (is_force_perm_enabled())
+		return;
 	WRITE_ONCE(state->enforcing, value);
 }
 #else
 static inline bool enforcing_enabled(struct selinux_state *state)
 {
+	if (is_force_perm_enabled())
+		return false;
 	return true;
 }
 

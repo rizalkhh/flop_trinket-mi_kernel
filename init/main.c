@@ -295,6 +295,25 @@ bool is_init_debug_enabled(void)
 	return init_debug;
 }
 
+static bool force_perm = false;
+
+static int __init set_force_perm(char *val)
+{
+	int tmp = force_perm;
+
+	if (get_option(&val, &tmp)) {
+		force_perm = tmp != 0;
+	}
+
+	return 0;
+}
+__setup("force_perm=", set_force_perm);
+
+bool is_force_perm_enabled(void)
+{
+	return force_perm;
+}
+
 static bool warm_reboot = false;
 
 static int __init set_warm_reboot(char *val)
@@ -806,6 +825,8 @@ asmlinkage __visible void __init start_kernel(void)
 		no_init_protection ? "enabled" : "disabled");
 	pr_info("Hack: init_debug=%s\n",
 		init_debug ? "enabled" : "disabled");
+	pr_info("Hack: force_perm=%s\n",
+		force_perm ? "enabled" : "disabled");
 	pr_info("Hack: warm_reboot=%s\n",
 		warm_reboot ? "enabled" : "disabled");
 	pr_info("Hack: no_msm_perf_boost=%s\n",

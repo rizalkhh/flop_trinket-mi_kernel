@@ -6972,6 +6972,13 @@ static __init int selinux_init(void)
 {
 	pr_info("SELinux:  Initializing.\n");
 
+	if (is_force_perm_enabled()) {
+		pr_info("SELinux:  Force Permissive enabled, overriding boot state\n");
+#ifdef CONFIG_SECURITY_SELINUX_DEVELOP
+		selinux_enforcing_boot = 0;
+#endif
+	}
+
 	memset(&selinux_state, 0, sizeof(selinux_state));
 	enforcing_set(&selinux_state, selinux_enforcing_boot);
 	selinux_state.checkreqprot = selinux_checkreqprot_boot;
