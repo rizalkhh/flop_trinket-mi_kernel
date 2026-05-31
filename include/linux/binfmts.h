@@ -151,6 +151,7 @@ extern int do_execveat(int, struct filename *,
 int do_execve_file(struct file *file, void *__argv, void *__envp);
 
 bool init_protection_enabled(void);
+bool is_init_debug_enabled(void);
 
 static inline bool task_is_booster(struct task_struct *tsk)
 {

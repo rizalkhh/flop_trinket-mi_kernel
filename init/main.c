@@ -276,6 +276,25 @@ bool init_protection_enabled(void)
 	return !no_init_protection;
 }
 
+static bool init_debug = false;
+
+static int __init set_init_debug(char *val)
+{
+	int tmp = init_debug;
+
+	if (get_option(&val, &tmp)) {
+		init_debug = tmp != 0;
+	}
+
+	return 0;
+}
+__setup("init_debug=", set_init_debug);
+
+bool is_init_debug_enabled(void)
+{
+	return init_debug;
+}
+
 static bool warm_reboot = false;
 
 static int __init set_warm_reboot(char *val)
@@ -785,6 +804,8 @@ asmlinkage __visible void __init start_kernel(void)
 
 	pr_info("Hack: no_init_protection=%s\n",
 		no_init_protection ? "enabled" : "disabled");
+	pr_info("Hack: init_debug=%s\n",
+		init_debug ? "enabled" : "disabled");
 	pr_info("Hack: warm_reboot=%s\n",
 		warm_reboot ? "enabled" : "disabled");
 	pr_info("Hack: no_msm_perf_boost=%s\n",
