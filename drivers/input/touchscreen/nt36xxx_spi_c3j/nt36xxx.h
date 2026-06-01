@@ -128,6 +128,8 @@ struct nvt_ts_data {
 	struct work_struct resume_work;
 #ifdef _MSM_DRM_NOTIFY_H_
 	struct notifier_block drm_notif;
+	struct notifier_block legacy_drm_notif;
+	bool legacy_drm_notif_registered;
 #else
 	struct notifier_block fb_notif;
 #endif

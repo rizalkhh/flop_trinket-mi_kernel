@@ -85,6 +85,8 @@ extern void Boot_Update_Firmware(struct work_struct *work);
 static void nvt_ts_resume_work(struct work_struct *work);
 #ifdef _MSM_DRM_NOTIFY_H_
 static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long event, void *data);
+static int nvt_legacy_drm_notifier_callback(struct notifier_block *self, unsigned long event, void *data);
+static void nvt_legacy_drm_notifier_unregister(struct nvt_ts_data *ts);
 #else
 static int nvt_fb_notifier_callback(struct notifier_block *self, unsigned long event, void *data);
 #endif
@@ -1976,6 +1978,16 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 		NVT_ERR("register drm_notifier failed. ret=%d\n", ret);
 		goto err_register_drm_notif_failed;
 	}
+	if (nvt_booted_recovery()) {
+		ts->legacy_drm_notif.notifier_call = nvt_legacy_drm_notifier_callback;
+		ret = drm_register_client(&ts->legacy_drm_notif);
+		if (ret) {
+			NVT_ERR("register legacy drm_notifier failed. ret=%d\n", ret);
+			ret = 0;
+		} else {
+			ts->legacy_drm_notif_registered = true;
+		}
+	}
 #else
 	ts->fb_notif.notifier_call = nvt_fb_notifier_callback;
 	ret = fb_register_client(&ts->fb_notif);
@@ -2016,6 +2028,7 @@ err_create_nvt_ts_workqueue_failed:
 	if (ts->workqueue)
 		destroy_workqueue(ts->workqueue);
 #ifdef _MSM_DRM_NOTIFY_H_
+	nvt_legacy_drm_notifier_unregister(ts);
 	if (msm_drm_unregister_client(&ts->drm_notif))
 		NVT_ERR("Error occurred while unregistering drm_notifier.\n");
 err_register_drm_notif_failed:
@@ -2112,6 +2125,7 @@ static int32_t nvt_ts_remove(struct spi_device *client)
 	if (ts->workqueue)
 		destroy_workqueue(ts->workqueue);
 #ifdef _MSM_DRM_NOTIFY_H_
+	nvt_legacy_drm_notifier_unregister(ts);
 	if (msm_drm_unregister_client(&ts->drm_notif))
 		NVT_ERR("Error occurred while unregistering drm_notifier.\n");
 #else
@@ -2198,6 +2212,7 @@ static void nvt_ts_shutdown(struct spi_device *client)
 	if (ts->workqueue)
 		destroy_workqueue(ts->workqueue);
 #ifdef _MSM_DRM_NOTIFY_H_
+	nvt_legacy_drm_notifier_unregister(ts);
 	if (msm_drm_unregister_client(&ts->drm_notif))
 		NVT_ERR("Error occurred while unregistering drm_notifier.\n");
 #else
@@ -2395,6 +2410,15 @@ static void nvt_ts_resume_work(struct work_struct *work)
 	nvt_ts_resume(&ts->client->dev);
 }
 #ifdef _MSM_DRM_NOTIFY_H_
+static void nvt_legacy_drm_notifier_unregister(struct nvt_ts_data *ts)
+{
+	if (ts->legacy_drm_notif_registered) {
+		if (drm_unregister_client(&ts->legacy_drm_notif))
+			NVT_ERR("Error occurred while unregistering legacy drm_notifier.\n");
+		ts->legacy_drm_notif_registered = false;
+	}
+}
+
 static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long event, void *data)
 {
 	struct msm_drm_notifier *evdata = data;
@@ -2419,6 +2443,33 @@ static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long 
 				//nvt_ts_resume(&ts->client->dev);
 				queue_work(ts->workqueue, &ts->resume_work);
 			}
+		}
+	}
+
+	return 0;
+}
+
+static int nvt_legacy_drm_notifier_callback(struct notifier_block *self, unsigned long event, void *data)
+{
+	struct drm_notify_data *evdata = data;
+	int *blank;
+	struct nvt_ts_data *ts =
+		container_of(self, struct nvt_ts_data, legacy_drm_notif);
+
+	if (!evdata || !evdata->data || !ts)
+		return 0;
+
+	blank = evdata->data;
+	if (event == DRM_EARLY_EVENT_BLANK) {
+		if (*blank == DRM_BLANK_POWERDOWN) {
+			NVT_LOG("legacy event=%lu, *blank=%d\n", event, *blank);
+			cancel_work_sync(&ts->resume_work);
+			nvt_ts_suspend(&ts->client->dev);
+		}
+	} else if (event == DRM_EVENT_BLANK) {
+		if (*blank == DRM_BLANK_UNBLANK) {
+			NVT_LOG("legacy event=%lu, *blank=%d\n", event, *blank);
+			queue_work(ts->workqueue, &ts->resume_work);
 		}
 	}
 
