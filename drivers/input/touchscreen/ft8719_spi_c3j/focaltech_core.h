@@ -201,6 +201,10 @@ struct fts_ts_data {
 #endif
 #if defined(CONFIG_FB)
     struct notifier_block fb_notif;
+    struct delayed_work recovery_bl_work;
+    bool recovery_bl_work_enabled;
+    bool recovery_bl_seen_on;
+    bool recovery_bl_is_on;
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
     struct early_suspend early_suspend;
 #endif

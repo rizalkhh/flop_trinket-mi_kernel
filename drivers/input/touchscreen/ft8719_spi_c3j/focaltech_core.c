@@ -72,12 +72,35 @@ extern char *saved_command_line;
 #endif
 
 struct fts_ts_data *fts_data;
+extern bool backlight_val;
+
+#ifdef CHECK_TOUCH_VENDOR
+static bool fts_booted_recovery(void)
+{
+	if (IS_ERR_OR_NULL(saved_command_line))
+		return false;
+
+	return !strstr(saved_command_line, "skip_initramfs") ||
+	       strstr(saved_command_line, "androidboot.mode=recovery") ||
+	       strstr(saved_command_line, "bootmode=recovery") ||
+	       strstr(saved_command_line, "recoverymode=1");
+}
+#else
+static bool fts_booted_recovery(void)
+{
+	return false;
+}
+#endif
 
 /*****************************************************************************
 * Static function prototypes
 *****************************************************************************/
 static int fts_ts_suspend(struct device *dev);
 static int fts_ts_resume(struct device *dev);
+#if defined(CONFIG_FB)
+static void fts_recovery_bl_work(struct work_struct *work);
+static void fts_recovery_bl_work_stop(struct fts_ts_data *ts_data);
+#endif
 #if FTS_GESTURE_EN
 static int32_t fts_ts_get_regulator(bool get);
 int32_t fts_ts_enable_regulator(bool en);
@@ -1283,6 +1306,13 @@ static void fts_resume_work(struct work_struct *work)
 	fts_ts_resume(ts_data->dev);
 }
 
+static void fts_recovery_bl_work_stop(struct fts_ts_data *ts_data)
+{
+	if (ts_data->recovery_bl_work_enabled)
+		cancel_delayed_work_sync(&ts_data->recovery_bl_work);
+	ts_data->recovery_bl_work_enabled = false;
+}
+
 static int fb_notifier_callback(struct notifier_block *self,
 						        unsigned long event, void *data)
 {
@@ -1320,6 +1350,35 @@ static int fb_notifier_callback(struct notifier_block *self,
 	}
 
 	return 0;
+}
+
+static void fts_recovery_bl_work(struct work_struct *work)
+{
+	struct fts_ts_data *ts_data = container_of(to_delayed_work(work),
+						  struct fts_ts_data,
+						  recovery_bl_work);
+	bool bl_on = backlight_val;
+
+	if (!ts_data->recovery_bl_work_enabled)
+		return;
+
+	if (bl_on)
+		ts_data->recovery_bl_seen_on = true;
+
+	if (ts_data->recovery_bl_seen_on && bl_on != ts_data->recovery_bl_is_on) {
+		FTS_INFO("recovery backlight state changed:%d", bl_on);
+		ts_data->recovery_bl_is_on = bl_on;
+
+		if (bl_on) {
+			queue_work(ts_data->ts_workqueue, &ts_data->resume_work);
+		} else {
+			cancel_work_sync(&ts_data->resume_work);
+			fts_ts_suspend(ts_data->dev);
+		}
+	}
+
+	queue_delayed_work(ts_data->ts_workqueue, &ts_data->recovery_bl_work,
+			   msecs_to_jiffies(250));
 }
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
 static void fts_ts_early_suspend(struct early_suspend *handler)
@@ -1620,6 +1679,15 @@ static int fts_ts_probe_entry(struct fts_ts_data *ts_data)
 	if (ret) {
 		FTS_ERROR("[FB]Unable to register fb_notifier: %d", ret);
 	}
+	if (fts_booted_recovery()) {
+		ts_data->recovery_bl_is_on = backlight_val;
+		ts_data->recovery_bl_seen_on = backlight_val;
+		ts_data->recovery_bl_work_enabled = true;
+		INIT_DELAYED_WORK(&ts_data->recovery_bl_work, fts_recovery_bl_work);
+		queue_delayed_work(ts_data->ts_workqueue,
+				   &ts_data->recovery_bl_work,
+				   msecs_to_jiffies(250));
+	}
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
 	ts_data->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + FTS_SUSPEND_LEVEL;
 	ts_data->early_suspend.suspend = fts_ts_early_suspend;
@@ -1703,6 +1771,7 @@ static int fts_ts_remove_entry(struct fts_ts_data *ts_data)
 		destroy_workqueue(ts_data->ts_workqueue);
 
 #if defined(CONFIG_FB)
+	fts_recovery_bl_work_stop(ts_data);
 	if (msm_drm_unregister_client(&ts_data->fb_notif))
 		FTS_ERROR("Error occurred while unregistering fb_notifier.");
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
