@@ -161,6 +161,24 @@ const struct mtk_chip_config spi_ctrdata = {
 
 static uint8_t bTouchIsAwake = 0;
 
+#ifdef CHECK_TOUCH_VENDOR
+static bool nvt_booted_recovery(void)
+{
+	if (IS_ERR_OR_NULL(saved_command_line))
+		return false;
+
+	return !strstr(saved_command_line, "skip_initramfs") ||
+	       strstr(saved_command_line, "androidboot.mode=recovery") ||
+	       strstr(saved_command_line, "bootmode=recovery") ||
+	       strstr(saved_command_line, "recoverymode=1");
+}
+#else
+static bool nvt_booted_recovery(void)
+{
+	return false;
+}
+#endif
+
 #if WAKEUP_GESTURE
 #define WAKEUP_OFF 4
 #define WAKEUP_ON 5
@@ -2369,6 +2387,11 @@ static int32_t nvt_ts_resume(struct device *dev)
 #if defined(CONFIG_FB)
 static void nvt_ts_resume_work(struct work_struct *work)
 {
+	if (nvt_booted_recovery() && bTouchIsAwake) {
+		NVT_LOG("force recovery resume after display unblank\n");
+		bTouchIsAwake = 0;
+	}
+
 	nvt_ts_resume(&ts->client->dev);
 }
 #ifdef _MSM_DRM_NOTIFY_H_
