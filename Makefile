@@ -920,9 +920,9 @@ lto-clang-flags	:= -flto=thin -fno-split-lto-unit $(call cc-option,-funified-lto
 LDFLAGS		+= --thinlto-cache-dir=.thinlto-cache
 
 # LLVM tunings
-LDFLAGS += -mllvm -inline-threshold=500
+LDFLAGS += -mllvm -inline-threshold=300
 LDFLAGS += --plugin-opt=-import-hot-multiplier=2
-LDFLAGS += --plugin-opt=-import-instr-limit=80
+LDFLAGS += --plugin-opt=-import-instr-limit=30
 KBUILD_CFLAGS += -mllvm -unroll-threshold=600
 else
 lto-clang-flags	:= -flto
