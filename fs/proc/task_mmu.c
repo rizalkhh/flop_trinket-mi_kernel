@@ -396,22 +396,8 @@ show_map_vma(struct seq_file *m, struct vm_area_struct *vma, int is_pid)
 #endif // #ifdef CONFIG_KSU_SUSFS_OPEN_REDIRECT
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MAP
-		if (SUSFS_IS_INODE_SUS_MAP(inode)) {
-			seq_setwidth(m, 25 + sizeof(void *) * 6 - 1);
-			seq_put_hex_ll(m, NULL, vma->vm_start, 8);
-			seq_put_hex_ll(m, "-", vma->vm_end, 8);
-			seq_putc(m, ' ');
-			seq_putc(m, '-');
-			seq_putc(m, '-');
-			seq_putc(m, '-');
-			seq_putc(m, 'p');
-			seq_put_hex_ll(m, " ", pgoff, 8);
-			seq_put_hex_ll(m, " ", MAJOR(dev), 2);
-			seq_put_hex_ll(m, ":", MINOR(dev), 2);
-			seq_put_decimal_ull(m, " ", ino);
-			seq_putc(m, ' ');
-			goto done;
-		}
+		if (SUSFS_IS_INODE_SUS_MAP(inode))
+			return;
 #endif
 		dev = inode->i_sb->s_dev;
 		ino = inode->i_ino;
@@ -920,50 +906,10 @@ static int show_smap(struct seq_file *m, void *v, int is_pid)
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 	if (vma->vm_file) {
-		struct inode *inode = file_inode(vma->vm_file);
-
-		if (SUSFS_IS_INODE_SUS_MAP(inode)) {
-			if (rollup_mode) {
-				bool first = mss->first;
-				unsigned long first_vma_start = mss->first_vma_start;
-
-				memset(mss, 0, sizeof(*mss));
-				mss->first = first;
-				mss->first_vma_start = first_vma_start;
+		if (SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file))) {
+			if (rollup_mode)
 				goto bypass_orig_flow;
-			}
-
-			show_map_vma(m, vma, is_pid);
-			seq_printf(m,
-				   "Size:           %8lu kB\n"
-				   "KernelPageSize: %8lu kB\n"
-				   "MMUPageSize:    %8lu kB\n",
-				   (vma->vm_end - vma->vm_start) >> 10,
-				   vma_kernel_pagesize(vma) >> 10,
-				   vma_mmu_pagesize(vma) >> 10);
-			seq_printf(m,
-				   "Rss:            %8lu kB\n"
-				   "Pss:            %8lu kB\n"
-				   "Shared_Clean:   %8lu kB\n"
-				   "Shared_Dirty:   %8lu kB\n"
-				   "Private_Clean:  %8lu kB\n"
-				   "Private_Dirty:  %8lu kB\n"
-				   "Referenced:     %8lu kB\n"
-				   "Anonymous:      %8lu kB\n"
-				   "LazyFree:       %8lu kB\n"
-				   "AnonHugePages:  %8lu kB\n"
-				   "ShmemPmdMapped: %8lu kB\n"
-				   "Shared_Hugetlb: %8lu kB\n"
-				   "Private_Hugetlb: %7lu kB\n"
-				   "Swap:           %8lu kB\n"
-				   "SwapPss:        %8lu kB\n"
-				   "Locked:         %8lu kB\n",
-				   0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
-				   0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL);
-			if (arch_pkeys_enabled())
-				seq_printf(m, "ProtectionKey:  %8u\n", vma_pkey(vma));
-			seq_puts(m, "VmFlags: mr mw me\n");
-			goto out;
+			return 0;
 		}
 	}
 #endif
@@ -1062,10 +1008,8 @@ bypass_orig_flow:
 		arch_show_smap(m, vma);
 		show_smap_vma_flags(m, vma);
 	}
-#ifdef CONFIG_KSU_SUSFS_SUS_MAP
-out:
-#endif
 	m_cache_vma(m, vma);
+
 	return ret;
 }
 
@@ -1758,14 +1702,17 @@ static ssize_t pagemap_read(struct file *file, char __user *buf,
 		if (end < start_vaddr || end > end_vaddr)
 			end = end_vaddr;
 		down_read(&mm->mmap_sem);
-		ret = walk_page_range(start_vaddr, end, &pagemap_walk);
+
 #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 		vma = find_vma(mm, start_vaddr);
-		if (vma && vma->vm_file) {
-			struct inode *inode = file_inode(vma->vm_file);
-			if (SUSFS_IS_INODE_SUS_MAP(inode))
-				pm.buffer->pme = 0;
-		}
+		if (vma && start_vaddr < vma->vm_start)
+				vma = NULL;
+		if (vma && vma->vm_file && SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file)))
+			goto bypass_orig_flow;
+#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MAP
+		ret = walk_page_range(start_vaddr, end, &pagemap_walk);
+#ifdef CONFIG_KSU_SUSFS_SUS_MAP
+		bypass_orig_flow:
 #endif // #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 		up_read(&mm->mmap_sem);
 		start_vaddr = end;
