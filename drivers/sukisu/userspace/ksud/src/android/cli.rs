@@ -18,7 +18,7 @@ use crate::{
 
 /// KernelSU userspace cli
 #[derive(Parser, Debug)]
-#[command(author, version = defs::VERSION_NAME, about, long_about = None)]
+#[command(author, version = defs::FULL_VERSION, about, long_about = None)]
 struct Args {
     #[command(subcommand)]
     command: Commands,
@@ -493,7 +493,10 @@ enum Kernel {
 #[derive(clap::Subcommand, Debug)]
 enum DynamicManagerOp {
     /// Get the signature of the current dynamic manager (size+hash)
-    Get,
+    Get {
+        #[arg(long)]
+        internal: Option<bool>,
+    },
     /// Set the signature of the dynamic manager
     Set {
         /// the signature size
@@ -794,11 +797,9 @@ pub fn run() -> Result<()> {
                 println!("flags: 0x{:x}", info.flags);
                 println!("uapi_version: {}", info.uapi_version);
                 println!("features: 0x{:x}", info.features);
-                println!("lkm: {}", (info.flags & uapi::KSU_GET_INFO_FLAG_LKM) != 0);
-                println!(
-                    "late_load: {}",
-                    (info.flags & uapi::KSU_GET_INFO_FLAG_LATE_LOAD) != 0
-                );
+                println!("lkm: {}", ksucalls::is_lkm());
+                println!("late_load: {}", ksucalls::is_late_load());
+                println!("runtime_mode: {}", ksucalls::runtime_mode());
                 println!(
                     "pr_build: {}",
                     (info.flags & uapi::KSU_GET_INFO_FLAG_PR_BUILD) != 0
@@ -865,9 +866,18 @@ pub fn run() -> Result<()> {
             },
             Kernel::DynamicManager { command } => match command {
                 DynamicManagerOp::Set { size, hash } => dynamic_manager::set(size, hash),
-                DynamicManagerOp::Get => {
+                DynamicManagerOp::Get { internal } => {
                     let (size, hash) = ksucalls::dynamic_manager_get()?;
-                    println!("size: {}, hash: {}", size, String::from_utf8_lossy(&hash));
+                    if internal.is_some_and(|s| s) {
+                        println!(
+                            "{}",
+                            serde_json::to_string_pretty(
+                                &serde_json::json!({"size":size,"hash":String::from_utf8_lossy(&hash)})
+                            )?
+                        );
+                    } else {
+                        println!("size: {}, hash: {}", size, String::from_utf8_lossy(&hash));
+                    }
                     Ok(())
                 }
                 DynamicManagerOp::SetApk { apk } => {
