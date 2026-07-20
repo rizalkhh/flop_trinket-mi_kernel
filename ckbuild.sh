@@ -147,7 +147,7 @@ USE_CCACHE=1
 ## Parse arguments
 DO_KSU=0
 DO_SUKI=0
-DO_RKSU=0
+DO_XXKSU=0
 DO_CLEAN=0
 DO_MENUCONFIG=0
 IS_RELEASE=0
@@ -168,9 +168,9 @@ for arg in "$@"; do
         echo "INFO: ReSukiSU argument passed"
         DO_SUKI=1
     fi
-    if [[ "$arg" == *u* ]]; then
-        echo "INFO: RKSU argument passed"
-        DO_RKSU=1
+    if [[ "$arg" == *x* ]]; then
+        echo "INFO: XXKSU argument passed"
+        DO_XXKSU=1
     fi
     if [[ "$arg" == *c* ]]; then
         echo "INFO: clean build enabled"
@@ -202,7 +202,7 @@ done
 KSU_COUNT=0
 [ "$DO_KSU" == "1" ] && KSU_COUNT=$((KSU_COUNT + 1))
 [ "$DO_SUKI" == "1" ] && KSU_COUNT=$((KSU_COUNT + 1))
-[ "$DO_RKSU" == "1" ] && KSU_COUNT=$((KSU_COUNT + 1))
+[ "$DO_XXKSU" == "1" ] && KSU_COUNT=$((KSU_COUNT + 1))
 if [ "$KSU_COUNT" -gt 1 ]; then
     echo "ERROR: KSU variants are mutually exclusive. Please select only one."
     exit 1
@@ -254,9 +254,9 @@ if [[ "$DO_KSU" == "1" ]]; then
 elif [ "$DO_SUKI" == "1" ]; then
     CK_TYPE="ReSukiSU-SUSFS"
     CK_TYPE_SHORT="RESKS"
-elif [ "$DO_RKSU" == "1" ]; then
-    CK_TYPE="RKSU"
-    CK_TYPE_SHORT="RKS"
+elif [ "$DO_XXKSU" == "1" ]; then
+    CK_TYPE="XXKSU"
+    CK_TYPE_SHORT="XXK"
 else
     CK_TYPE="Vanilla"
     CK_TYPE_SHORT="V"
@@ -588,8 +588,8 @@ prep_build() {
 build() {
     mkdir -p out
     if [[ "$DO_REGEN" = "1" ]]; then
-        if [[ "$DO_KSU" = "1" ]] || [[ "$DO_SUKI" = "1" ]]; then
-             echo "ERROR: Can't regenerate with KSU or ReSukiSU argument"
+        if [[ "$DO_KSU" = "1" ]] || [[ "$DO_SUKI" = "1" ]] || [[ "$DO_XXKSU" == "1" ]]; then
+             echo "ERROR: Can't regenerate with KSU argument"
              exit 1
         fi
         # Clean any existing .config to avoid picking up settings from previous builds
@@ -599,7 +599,7 @@ build() {
         FRAGMENTS="$BASE_FRAGMENT $FRAGMENT"
         [[ "$DO_KSU" == "1" ]] && FRAGMENTS="$FRAGMENTS ksu.config"
         [[ "$DO_SUKI" == "1" ]] && FRAGMENTS="$FRAGMENTS sukisu.config"
-        [[ "$DO_RKSU" == "1" ]] && FRAGMENTS="$FRAGMENTS rksu.config"
+        [[ "$DO_XXKSU" == "1" ]] && FRAGMENTS="$FRAGMENTS xxksu.config"
         if [[ "$CKB_CRASHKEY" == "1" ]]; then
             FRAGMENTS="$FRAGMENTS crash_key.config"
             # Append CrashKey to the ZIP name so these builds are identifiable

@@ -196,4 +196,4 @@ obj-y += fstabdt_disable/
 # Kernel SU variants
 obj-$(CONFIG_KSU_NEXT)		+= kernelsu/kernel/
 obj-$(CONFIG_KSU_SUKI)		+= sukisu/kernel/
-obj-$(CONFIG_KSU_RKSU)		+= rksu/kernel/
+obj-$(CONFIG_KSU_XXKSU)		+= xxksu/kernel/
