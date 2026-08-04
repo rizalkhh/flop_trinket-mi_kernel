@@ -3,16 +3,73 @@
 # Dependency installation for ckbuild.
 # Sourced by build/ckbuild.sh — runs on source.
 
-install_deps_deb() {
-    # Dependencies
-    UB_DEPLIST="lz4 brotli flex bc cpio kmod ccache zip libtinfo5 python3"
-    if grep -q "Ubuntu" /etc/os-release; then
-        sudo apt update -qq
-        sudo apt install $UB_DEPLIST -y
-    else
-        log_info "distro not supported, install manually: $UB_DEPLIST"
+if [ -f /etc/doas.conf ] && command -v "doas" &>/dev/null; then
+    ROOT="doas"
+elif command -v "sudo" &>/dev/null; then
+    ROOT="sudo"
+else
+    log_err "neither doas nor sudo found."
+    return 1 2>/dev/null || exit 1
+fi
+
+DEPS=( lz4 brotli flex bc cpio kmod zip binutils-aarch64-linux-gnu ccache libtinfo5 python3 )
+
+UBUNTU() {
+    local DEPS=( lz4 brotli flex bc cpio kmod zip ccache binutils-aarch64-linux-gnu libtinfo5 python3 )
+    local MISSING=()
+
+    # Check command presence
+    for d in "${DEPS[@]}"; do
+        if ! command -v "$d" >/dev/null 2>&1; then
+            MISSING+=("$d")
+        fi
+    done
+
+    if [ ${#MISSING[@]} -gt 0 ]; then
+        $ROOT apt-get update -qq || true
+        $ROOT apt-get install -y "${MISSING[@]}" || true
     fi
 }
 
-## Pre-build dependencies
-install_deps_deb
+ARCH() {
+    local DEPS=( lz4 brotli flex bc cpio kmod zip aarch64-linux-gnu-binutils ccache )
+    local MISSING
+    MISSING=$(pacman -T "${DEPS[@]}" 2>/dev/null || true)
+
+    if [ -n "$MISSING" ]; then
+        $ROOT pacman -Syyuu --needed --noconfirm $MISSING || true
+    fi
+}
+
+GENTOO() {
+    local DEPS=( lz4 brotli flex bc cpio kmod ccache zip )
+    local PKGS=( app-arch/lz4 app-arch/brotli sys-devel/flex sys-devel/bc app-arch/cpio sys-apps/kmod dev-util/ccache app-arch/zip )
+    local MISSING=()
+
+    for i in "${!DEPS[@]}"; do
+        if ! command -v "${DEPS[i]}" >/dev/null 2>&1; then
+            MISSING+=("${PKGS[i]}")
+        fi
+    done
+
+    if [ ${#MISSING[@]} -gt 0 ]; then
+        $ROOT emerge -nvq "${MISSING[@]}" || true
+    fi
+}
+
+if [ -f /etc/os-release ]; then
+    source "/etc/os-release"
+fi
+DISTRO_IDS="${ID:-} ${ID_LIKE:-}"
+
+if echo "$DISTRO_IDS" | grep -Eq 'ubuntu|debian'; then
+    UBUNTU
+elif echo "$DISTRO_IDS" | grep -Eq 'arch'; then
+    ARCH
+elif echo "$DISTRO_IDS" | grep -Eq 'gentoo'; then
+    GENTOO
+else
+    echo ""
+    log_info "distro not supported, install manually: ${DEPS[*]}"
+    echo ""
+fi
