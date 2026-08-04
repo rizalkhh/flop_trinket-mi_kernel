@@ -3,7 +3,7 @@ set -e
 
 # Configuration
 all_devs=("ginkgo" "laurel_sprout") # Define devices for "all" target
-ck_script="ckbuild.sh"              # Name of main script
+ck_script="build/ckbuild.sh"        # Name of main script
 
 rm -r include/config &>/dev/null || true
 export WP=${WP:-$(realpath "${PWD}/../")}
