@@ -10,8 +10,7 @@ install_deps_deb() {
         sudo apt update -qq
         sudo apt install $UB_DEPLIST -y
     else
-        log_info "Your distro is not Ubuntu, skipping dependencies installation..."
-        log_info "Make sure you have these dependencies installed before proceeding: $UB_DEPLIST"
+        log_info "distro not supported, install manually: $UB_DEPLIST"
     fi
 }
 

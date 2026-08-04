@@ -7,7 +7,7 @@ build() {
     mkdir -p out
     if [[ "$DO_REGEN" = "1" ]]; then
         if [[ "$DO_KSU" = "1" ]] || [[ "$DO_SUKI" = "1" ]] || [[ "$DO_XXKSU" == "1" ]]; then
-             log_err "Can't regenerate with KSU argument"
+             log_err "Can't regenerate with SU variant argument"
              exit 1
         fi
         # Clean any existing .config to avoid picking up settings from previous builds

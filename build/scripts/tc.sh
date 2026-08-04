@@ -40,14 +40,14 @@ fi
 if [[ -z "$CUST_DIR" ]]; then
     CUST_DIR="$TC_DIR/custom-toolchain"
 else
-    echo -e "\n$(log_info "Overriding custom toolchain path...")"
+    log_info "Overriding custom toolchain path..."
 fi
 
 # Pick aosp, proton, rm69, lolz, slim, greenforce, zyc, rv, custom
 if [[ -z "$CLANG_TYPE" ]]; then
     CLANG_TYPE="aosp"
 else
-    echo -e "\n$(log_info "Overriding default toolchain")"
+    log_info "Overriding default toolchain"
 fi
 
 get_toolchain() {
@@ -59,10 +59,10 @@ get_toolchain() {
             toolchain_dir="$AC_DIR"
             USE_GCC_BINUTILS=1
             if [[ ! -d "$toolchain_dir" ]]; then
-                echo -e "\n$(log_info "AOSP Clang not found! Cloning to $toolchain_dir...")"
+                log_info "AOSP Clang not found! Cloning to $toolchain_dir..."
                 CURRENT_CLANG=$(curl -s "$AOSP_REPO" | grep -oE "clang-r[0-9a-f]+" | sort -u | tail -n1)
                 if ! curl -LSsO "$AOSP_ARCHIVE/$CURRENT_CLANG.tar.gz"; then
-                    echo -e "\n$(log_err "Cloning failed! Aborting...")"
+                    log_err "Download failed! Aborting..."
                     exit 1
                 fi
                 mkdir -p "$toolchain_dir" && tar -xf ./*.tar.gz -C "$toolchain_dir" && rm ./*.tar.gz
@@ -124,7 +124,7 @@ get_toolchain() {
             USE_GCC_BINUTILS=1
             toolchain_dir="$GC_DIR"
             if [[ ! -d "$toolchain_dir" ]]; then
-                echo -e "\n$(log_info "Greenforce Clang not found! Cloning to $toolchain_dir...")"
+                log_info "Greenforce Clang not found! Cloning to $toolchain_dir..."
                 LATEST_RELEASE=$(curl -s $GC_REPO | grep "browser_download_url" | grep ".tar.gz" | cut -d '"' -f 4)
                 if [[ -z "$LATEST_RELEASE" ]]; then
                     log_err "Failed to fetch the latest Greenforce Clang release! Aborting..."
@@ -142,22 +142,22 @@ get_toolchain() {
         custom)
             toolchain_dir="$CUST_DIR"
             if [[ ! -d "$toolchain_dir" ]]; then
-                echo -e "\n$(log_err "Custom toolchain not found! Aborting...")"
-                echo -e "$(log_info "Please provide a toolchain at $CUST_DIR or select a different toolchain")"
+                log_err "Custom toolchain not found! Aborting..."
+                log_info "Please provide a toolchain at $CUST_DIR or select a different toolchain"
                 exit 1
             fi
             ;;
         zyc)
             toolchain_dir="$ZC_DIR"
             if [[ ! -d "$toolchain_dir" ]]; then
-            echo -e "\n$(log_info "ZyC Clang not found! Cloning to $toolchain_dir...")"
+            log_info "ZyC Clang not found! Cloning to $toolchain_dir..."
             fi
 
             # Check and cache the latest version
             ZYC_VERSION_FILE="$WP/zyc-clang-version.txt"
             LATEST_VERSION=$(curl -s "$ZC_REPO" | head -n 1)
             if [[ -z "$LATEST_VERSION" ]]; then
-                log_info "Failed to check ZyC Clang version"
+                log_warn "Failed to check ZyC Clang version"
             else
                 if [[ -f "$ZYC_VERSION_FILE" ]]; then
                     CURRENT_VERSION=$(cat "$ZYC_VERSION_FILE")
@@ -195,7 +195,7 @@ get_toolchain() {
         rv)
             toolchain_dir="$RV_DIR"
             if [[ ! -d "$toolchain_dir" ]]; then
-            echo -e "\n$(log_info "RvClang not found! Fetching the latest version...")"
+            log_info "RvClang not found! Fetching the latest version..."
             LATEST_RELEASE=$(curl -s "$RV_REPO" | grep "browser_download_url" | grep ".tar.gz" | cut -d '"' -f 4)
             if [[ -z "$LATEST_RELEASE" ]]; then
                 log_err "Failed to fetch the latest RvClang release! Aborting..."
@@ -220,7 +220,7 @@ get_toolchain() {
             fi
             ;;
         *)
-            echo -e "\n$(log_err "Unknown toolchain type: $toolchain_type")"
+            log_err "Unknown toolchain type: $toolchain_type"
             exit 1
             ;;
     esac
@@ -278,14 +278,14 @@ prep_toolchain() {
             ;;
         custom)
             toolchain_dir="$CUST_DIR"
-            log_info "Toolchain: Custom toolchain"
+            log_info "Toolchain: Custom"
             ;;
         rv)
             toolchain_dir="$RV_DIR"
             log_info "Toolchain: RvClang"
             ;;
         *)
-            echo -e "\n$(log_err "Unknown toolchain type: $toolchain_type")"
+            log_err "Unknown toolchain type: $toolchain_type"
             exit 1
             ;;
     esac

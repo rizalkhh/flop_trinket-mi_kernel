@@ -4,7 +4,7 @@
 # Sourced by build/ckbuild.sh.
 
 dtbo_build() {
-    echo -e "\n$(log_info "Running dtbo build...")"
+    echo -e "\n$(log_info "Building DTBO image...")"
     mkdir -p "$DTBO_TMP"
     local IN_DTBO=""
     case "$CODENAME" in

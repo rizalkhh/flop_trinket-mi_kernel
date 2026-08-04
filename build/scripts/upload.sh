@@ -32,7 +32,7 @@ upload() {
     fi
 
     if [[ "$DO_TG" == "1" ]]; then
-            echo -e "\n$(log_info "Uploading to Telegram...")\n"
+            log_info "Uploading build to Telegram"
             tgs "$ZIP_PATH"
             log_info "Done!"
     fi

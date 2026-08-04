@@ -66,7 +66,7 @@ post_build() {
 }
 
 clean_tmp() {
-    echo -e "$(log_info "Cleaning after build...")"
+    log_info "Cleaning after build..."
     rm -f "$OUT_IMAGE"
     rm -f "$OUT_DTBO"
     rm -rf "$DTBO_TMP"

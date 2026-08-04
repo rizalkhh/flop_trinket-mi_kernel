@@ -59,7 +59,7 @@ else
 fi
 
 if [[ -z "$WP" ]]; then
-    echo -e "\n$(log_err "Environment not Gitpod! Please set the WP env var...")\n"
+    echo -e "\n$(log_err "Please set the WP env var.")\n"
     exit 1
 fi
 
@@ -127,31 +127,31 @@ DO_ZXZ=0
 DO_FLTO=0
 for arg in "$@"; do
     if [[ "$arg" == *m* ]]; then
-        log_info "menuconfig enabled"
+        log_info "menuconfig argument passed, kernel configuration menu will be shown"
         DO_MENUCONFIG=1
     fi
     if [[ "$arg" == *k* ]]; then
-        log_info "KernelSU enabled"
+        log_info "KernelSU argument passed, a KernelSU build will be made"
         DO_KSU=1
     fi
     if [[ "$arg" == *s* ]]; then
-        log_info "ReSukiSU argument passed"
+        log_info "ReSukiSU argument passed, a ReSukiSU build will be made"
         DO_SUKI=1
     fi
     if [[ "$arg" == *x* ]]; then
-        log_info "XXKSU argument passed"
+        log_info "XXKSU argument passed, an XXKSU build will be made"
         DO_XXKSU=1
     fi
     if [[ "$arg" == *c* ]]; then
-        log_info "clean build enabled"
+        log_info "clean argument passed, output directory will be wiped"
         DO_CLEAN=1
     fi
     if [[ "$arg" == *R* ]]; then
-        log_info "Release build enabled"
+        log_info "Release argument passed, build marked as release"
         IS_RELEASE=1
     fi
     if [[ "$arg" == *t* ]]; then
-        log_info "Telegram upload enabled"
+        log_info "Telegram argument passed, build will be uploaded to Telegram"
         DO_TG=1
     fi
     if [[ "$arg" == *o* ]]; then
@@ -163,8 +163,8 @@ for arg in "$@"; do
         DO_REGEN=1
     fi
     if [[ "$arg" == *l* ]]; then
-        log_info "Full-LTO enabled"
-        log_warn "Full-LTO is VERY resource heavy and may take a long time to compile!"
+        log_info "Full-LTO argument passed"
+        log_warn "Full-LTO is VERY resource heavy and may take a long time to compile"
         DO_FLTO=1
     fi
 done
@@ -174,7 +174,7 @@ KSU_COUNT=0
 [ "$DO_SUKI" == "1" ] && KSU_COUNT=$((KSU_COUNT + 1))
 [ "$DO_XXKSU" == "1" ] && KSU_COUNT=$((KSU_COUNT + 1))
 if [ "$KSU_COUNT" -gt 1 ]; then
-    log_err "KSU variants are mutually exclusive. Please select only one."
+    log_err "Multiple SU variants are mutually exclusive. Please select only one."
     exit 1
 fi
 
@@ -182,7 +182,6 @@ DEFCONFIG="$DEFAULT_DEFCONFIG"
 if [[ "$IS_RELEASE" == "1" ]]; then
     BUILD_TYPE="Release"
 else
-    log_info "Build marked as testing"
     BUILD_TYPE="Testing"
 fi
 
@@ -229,7 +228,7 @@ ZIP_PATH="$WP/Floppy_$FK_VER-$CK_TYPE-$CODENAME-$DATE.zip"
 echo -e "\n$(log_info "Build info:")
 - Device: $DEVICE ($CODENAME)
 - Addons: $CK_TYPE
-- Floppy version: $FK_VER
+- FloppyKernel version: $FK_VER
 - Linux version: $LINUX_VER
 - Defconfig: $DEFCONFIG
 - Build date: $DATE
@@ -255,7 +254,7 @@ source "$SCRIPTS_DIR/upload.sh"
 prep_build() {
     ## Prepare ccache
     if [[ "$USE_CCACHE" == "1" ]]; then
-        log_info "ccache enabled"
+        log_info "Using ccache"
         if [[ "$IS_GP" == "1" ]]; then
             export CCACHE_DIR="$WP/.ccache"
             ccache -M 10G
