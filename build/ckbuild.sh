@@ -17,7 +17,7 @@ LAUREL_FRAGMENT="vendor/laurel_sprout.config"
 
 # Parse device argument
 if [[ -z "$1" ]]; then
-    echo -e "\nERROR: Please specify device to build!\n"
+    echo -e "\n$(log_err "Please specify device to build!")\n"
     exit 1
 fi
 
@@ -45,7 +45,7 @@ case "$TARGET_DEVICE" in
         FRAGMENT="vendor/unified.config"
         ;;
     *)
-        echo -e "\nERROR: Unknown device: $TARGET_DEVICE\n"
+        echo -e "\n$(log_err "Unknown device: $TARGET_DEVICE")\n"
         exit 1
         ;;
 esac
@@ -59,12 +59,12 @@ else
 fi
 
 if [[ -z "$WP" ]]; then
-    echo -e "\nERROR: Environment not Gitpod! Please set the WP env var...\n"
+    echo -e "\n$(log_err "Environment not Gitpod! Please set the WP env var...")\n"
     exit 1
 fi
 
 if [[ ! -d drivers ]]; then
-    echo -e "\nERROR: Please execute from top-level kernel tree\n"
+    echo -e "\n$(log_err "Please execute from top-level kernel tree")\n"
     exit 1
 fi
 
@@ -127,44 +127,44 @@ DO_ZXZ=0
 DO_FLTO=0
 for arg in "$@"; do
     if [[ "$arg" == *m* ]]; then
-        echo "INFO: menuconfig enabled"
+        log_info "menuconfig enabled"
         DO_MENUCONFIG=1
     fi
     if [[ "$arg" == *k* ]]; then
-        echo "INFO: KernelSU enabled"
+        log_info "KernelSU enabled"
         DO_KSU=1
     fi
     if [[ "$arg" == *s* ]]; then
-        echo "INFO: ReSukiSU argument passed"
+        log_info "ReSukiSU argument passed"
         DO_SUKI=1
     fi
     if [[ "$arg" == *x* ]]; then
-        echo "INFO: XXKSU argument passed"
+        log_info "XXKSU argument passed"
         DO_XXKSU=1
     fi
     if [[ "$arg" == *c* ]]; then
-        echo "INFO: clean build enabled"
+        log_info "clean build enabled"
         DO_CLEAN=1
     fi
     if [[ "$arg" == *R* ]]; then
-        echo "INFO: Release build enabled"
+        log_info "Release build enabled"
         IS_RELEASE=1
     fi
     if [[ "$arg" == *t* ]]; then
-        echo "INFO: Telegram upload enabled"
+        log_info "Telegram upload enabled"
         DO_TG=1
     fi
     if [[ "$arg" == *o* ]]; then
-        echo "INFO: 0x0.st upload enabled"
+        log_info "0x0.st upload enabled"
         DO_ZXZ=1
     fi
     if [[ "$arg" == *r* ]]; then
-        echo "INFO: config regeneration mode"
+        log_info "config regeneration mode"
         DO_REGEN=1
     fi
     if [[ "$arg" == *l* ]]; then
-        echo "INFO: Full-LTO enabled"
-        echo "WARNING: Full-LTO is VERY resource heavy and may take a long time to compile!"
+        log_info "Full-LTO enabled"
+        log_warn "Full-LTO is VERY resource heavy and may take a long time to compile!"
         DO_FLTO=1
     fi
 done
@@ -174,7 +174,7 @@ KSU_COUNT=0
 [ "$DO_SUKI" == "1" ] && KSU_COUNT=$((KSU_COUNT + 1))
 [ "$DO_XXKSU" == "1" ] && KSU_COUNT=$((KSU_COUNT + 1))
 if [ "$KSU_COUNT" -gt 1 ]; then
-    echo "ERROR: KSU variants are mutually exclusive. Please select only one."
+    log_err "KSU variants are mutually exclusive. Please select only one."
     exit 1
 fi
 
@@ -182,7 +182,7 @@ DEFCONFIG="$DEFAULT_DEFCONFIG"
 if [[ "$IS_RELEASE" == "1" ]]; then
     BUILD_TYPE="Release"
 else
-    echo "INFO: Build marked as testing"
+    log_info "Build marked as testing"
     BUILD_TYPE="Testing"
 fi
 
@@ -226,7 +226,7 @@ else
 fi
 ZIP_PATH="$WP/Floppy_$FK_VER-$CK_TYPE-$CODENAME-$DATE.zip"
 
-echo -e "\nINFO: Build info:
+echo -e "\n$(log_info "Build info:")
 - Device: $DEVICE ($CODENAME)
 - Addons: $CK_TYPE
 - Floppy version: $FK_VER
@@ -255,17 +255,17 @@ source "$SCRIPTS_DIR/upload.sh"
 prep_build() {
     ## Prepare ccache
     if [[ "$USE_CCACHE" == "1" ]]; then
-        echo "INFO: ccache enabled"
+        log_info "ccache enabled"
         if [[ "$IS_GP" == "1" ]]; then
             export CCACHE_DIR="$WP/.ccache"
             ccache -M 10G
         else
-            echo "WARNING: Environment is not Gitpod, please make sure you setup your own ccache configuration!"
+            log_warn "Environment is not Gitpod, please make sure you setup your own ccache configuration!"
         fi
     fi
 
-    # Show compiler information
-    echo -e "INFO: Compiler: $KBUILD_COMPILER_STRING\n"
+    # Show compiler info
+    echo -e "$(log_info "Compiler: $KBUILD_COMPILER_STRING")\n"
 }
 
 clean() {

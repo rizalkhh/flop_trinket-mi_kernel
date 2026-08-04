@@ -27,18 +27,18 @@ tgs() {
 
 upload() {
     if [[ "$DO_ZXZ" == "1" ]]; then
-    echo -e "\nINFO: Uploading to 0x0.st...\n"
-    curl -F'file=@'"$ZIP_PATH" http://0x0.st || echo "WARNING: Failed to upload build to 0x0.st (ignored)"
+    echo -e "\n$(log_info "Uploading to 0x0.st...")\n"
+    curl -F'file=@'"$ZIP_PATH" http://0x0.st || log_warn "Failed to upload build to 0x0.st (ignored)"
     fi
 
     if [[ "$DO_TG" == "1" ]]; then
-            echo -e "\nINFO: Uploading to Telegram...\n"
+            echo -e "\n$(log_info "Uploading to Telegram...")\n"
             tgs "$ZIP_PATH"
-            echo "INFO: Done!"
+            log_info "Done!"
     fi
     if [[ "$LOG_UPLOAD" == "1" ]]; then
-        echo -e "\nINFO: Uploading log to 0x0.st\n"
-        curl -F'file=@log.txt' http://0x0.st || echo "WARNING: Failed to upload log to 0x0.st (ignored)"
+        echo -e "\n$(log_info "Uploading log to 0x0.st")\n"
+        curl -F'file=@log.txt' http://0x0.st || log_warn "Failed to upload log to 0x0.st (ignored)"
     fi
     # Delete any leftover zip files
     # rm -f "$WP/FloppyKernel*zip"

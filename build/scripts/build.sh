@@ -7,7 +7,7 @@ build() {
     mkdir -p out
     if [[ "$DO_REGEN" = "1" ]]; then
         if [[ "$DO_KSU" = "1" ]] || [[ "$DO_SUKI" = "1" ]] || [[ "$DO_XXKSU" == "1" ]]; then
-             echo "ERROR: Can't regenerate with KSU argument"
+             log_err "Can't regenerate with KSU argument"
              exit 1
         fi
         # Clean any existing .config to avoid picking up settings from previous builds
@@ -42,13 +42,13 @@ build() {
 
     if [[ "$DO_REGEN" = "1" ]]; then
         cp -f out/.config "arch/arm64/configs/$DEFCONFIG"
-        echo "INFO: Configuration regenerated. Check the changes!"
+        log_info "Configuration regenerated. Check the changes!"
         exit 0
     fi
 
     # Disallow Release builds when CrashKey testing is enabled
     if [[ "$CKB_CRASHKEY" == "1" && "$IS_RELEASE" == "1" ]]; then
-        echo "ERROR: CrashKey builds cannot be Release builds"
+        log_err "CrashKey builds cannot be Release builds"
         exit 1
     fi
 
@@ -76,7 +76,7 @@ build() {
     fi
 
     ## Start the build
-    echo -e "\nINFO: Starting compilation...\n"
+    echo -e "\n$(log_info "Starting compilation...")\n"
 
     if [[ "$USE_CCACHE" == "1" ]]; then
         make -j$(nproc --all) O=out \

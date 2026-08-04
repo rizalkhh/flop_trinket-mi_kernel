@@ -40,14 +40,14 @@ fi
 if [[ -z "$CUST_DIR" ]]; then
     CUST_DIR="$TC_DIR/custom-toolchain"
 else
-    echo -e "\nINFO: Overriding custom toolchain path..."
+    echo -e "\n$(log_info "Overriding custom toolchain path...")"
 fi
 
 # Pick aosp, proton, rm69, lolz, slim, greenforce, zyc, rv, custom
 if [[ -z "$CLANG_TYPE" ]]; then
     CLANG_TYPE="aosp"
 else
-    echo -e "\nINFO: Overriding default toolchain"
+    echo -e "\n$(log_info "Overriding default toolchain")"
 fi
 
 get_toolchain() {
@@ -59,10 +59,10 @@ get_toolchain() {
             toolchain_dir="$AC_DIR"
             USE_GCC_BINUTILS=1
             if [[ ! -d "$toolchain_dir" ]]; then
-                echo -e "\nINFO: AOSP Clang not found! Cloning to $toolchain_dir..."
+                echo -e "\n$(log_info "AOSP Clang not found! Cloning to $toolchain_dir...")"
                 CURRENT_CLANG=$(curl -s "$AOSP_REPO" | grep -oE "clang-r[0-9a-f]+" | sort -u | tail -n1)
                 if ! curl -LSsO "$AOSP_ARCHIVE/$CURRENT_CLANG.tar.gz"; then
-                    echo -e "\nERROR: Cloning failed! Aborting..."
+                    echo -e "\n$(log_err "Cloning failed! Aborting...")"
                     exit 1
                 fi
                 mkdir -p "$toolchain_dir" && tar -xf ./*.tar.gz -C "$toolchain_dir" && rm ./*.tar.gz
@@ -73,9 +73,9 @@ get_toolchain() {
         sdclang)
             toolchain_dir="$SD_DIR"
             if [[ ! -d "$toolchain_dir" ]]; then
-                echo "INFO: SD Clang not found! Cloning to $toolchain_dir..."
+                log_info "SD Clang not found! Cloning to $toolchain_dir..."
                 if ! git clone -q -b "$SD_BRANCH" --depth=1 "$SD_REPO" "$toolchain_dir"; then
-                    echo "ERROR: Cloning failed! Aborting..."
+                    log_err "Cloning failed! Aborting..."
                     exit 1
                 fi
             fi
@@ -83,9 +83,9 @@ get_toolchain() {
         proton)
             toolchain_dir="$PC_DIR"
             if [[ ! -d "$toolchain_dir" ]]; then
-                echo "INFO: Proton Clang not found! Cloning to $toolchain_dir..."
+                log_info "Proton Clang not found! Cloning to $toolchain_dir..."
                 if ! git clone -q --depth=1 "$PC_REPO" "$toolchain_dir"; then
-                    echo "ERROR: Cloning failed! Aborting..."
+                    log_err "Cloning failed! Aborting..."
                     exit 1
                 fi
             fi
@@ -93,29 +93,29 @@ get_toolchain() {
         rm69)
             toolchain_dir="$RC_DIR"
             if [[ ! -d "$toolchain_dir" ]]; then
-                echo "INFO: RastaMod69 Clang not found! Cloning to $toolchain_dir..."
+                log_info "RastaMod69 Clang not found! Cloning to $toolchain_dir..."
                 wget -q --show-progress "$RC_URL" -O "$WP/RastaMod69-clang.tar.gz"
                 if [[ $? -ne 0 ]]; then
-                    echo "ERROR: Download failed! Aborting..."
+                    log_err "Download failed! Aborting..."
                     rm -f "$WP/RastaMod69-clang.tar.gz"
                     exit 1
                 fi
                 rm -rf clang && mkdir -p "$toolchain_dir" && tar -xf "$WP/RastaMod69-clang.tar.gz" -C "$toolchain_dir"
                 if [[ $? -ne 0 ]]; then
-                    echo "ERROR: Extraction failed! Aborting..."
+                    log_err "Extraction failed! Aborting..."
                     rm -f "$WP/RastaMod69-clang.tar.gz"
                     exit 1
                 fi
                 rm -f "$WP/RastaMod69-clang.tar.gz"
-                echo "INFO: RastaMod69 Clang successfully cloned to $toolchain_dir"
+                log_info "RastaMod69 Clang successfully cloned to $toolchain_dir"
             fi
             ;;
         lolz)
             toolchain_dir="$LZ_DIR"
             if [[ ! -d "$toolchain_dir" ]]; then
-                echo "INFO: Lolz Clang not found! Cloning to $toolchain_dir..."
+                log_info "Lolz Clang not found! Cloning to $toolchain_dir..."
                 if ! git clone -q --depth=1 "$LZ_REPO" "$toolchain_dir"; then
-                    echo "ERROR: Cloning failed! Aborting..."
+                    log_err "Cloning failed! Aborting..."
                     exit 1
                 fi
             fi
@@ -124,14 +124,14 @@ get_toolchain() {
             USE_GCC_BINUTILS=1
             toolchain_dir="$GC_DIR"
             if [[ ! -d "$toolchain_dir" ]]; then
-                echo -e "\nINFO: Greenforce Clang not found! Cloning to $toolchain_dir..."
+                echo -e "\n$(log_info "Greenforce Clang not found! Cloning to $toolchain_dir...")"
                 LATEST_RELEASE=$(curl -s $GC_REPO | grep "browser_download_url" | grep ".tar.gz" | cut -d '"' -f 4)
                 if [[ -z "$LATEST_RELEASE" ]]; then
-                    echo "ERROR: Failed to fetch the latest Greenforce Clang release! Aborting..."
+                    log_err "Failed to fetch the latest Greenforce Clang release! Aborting..."
                     exit 1
                 fi
                 if ! wget -q --show-progress -O "$WP/greenforce-clang.tar.gz" "$LATEST_RELEASE"; then
-                    echo "ERROR: Download failed! Aborting..."
+                    log_err "Download failed! Aborting..."
                     exit 1
                 fi
                 mkdir -p "$toolchain_dir"
@@ -142,27 +142,27 @@ get_toolchain() {
         custom)
             toolchain_dir="$CUST_DIR"
             if [[ ! -d "$toolchain_dir" ]]; then
-                echo -e "\nERROR: Custom toolchain not found! Aborting..."
-                echo -e "INFO: Please provide a toolchain at $CUST_DIR or select a different toolchain"
+                echo -e "\n$(log_err "Custom toolchain not found! Aborting...")"
+                echo -e "$(log_info "Please provide a toolchain at $CUST_DIR or select a different toolchain")"
                 exit 1
             fi
             ;;
         zyc)
             toolchain_dir="$ZC_DIR"
             if [[ ! -d "$toolchain_dir" ]]; then
-            echo -e "\nINFO: ZyC Clang not found! Cloning to $toolchain_dir..."
+            echo -e "\n$(log_info "ZyC Clang not found! Cloning to $toolchain_dir...")"
             fi
 
             # Check and cache the latest version
             ZYC_VERSION_FILE="$WP/zyc-clang-version.txt"
             LATEST_VERSION=$(curl -s "$ZC_REPO" | head -n 1)
             if [[ -z "$LATEST_VERSION" ]]; then
-                echo "INFO: Failed to check ZyC Clang version"
+                log_info "Failed to check ZyC Clang version"
             else
                 if [[ -f "$ZYC_VERSION_FILE" ]]; then
                     CURRENT_VERSION=$(cat "$ZYC_VERSION_FILE")
                     if [[ "$CURRENT_VERSION" != "$LATEST_VERSION" ]]; then
-                        echo "INFO: A new version of ZyC Clang is available: $LATEST_VERSION"
+                        log_info "A new version of ZyC Clang is available: $LATEST_VERSION"
                         echo "$LATEST_VERSION" > "$ZYC_VERSION_FILE"
                     fi
                 else
@@ -175,17 +175,17 @@ get_toolchain() {
                     echo "$LATEST_VERSION" > "$ZYC_VERSION_FILE"
                 fi
                 if [[ -z "$LATEST_VERSION" ]]; then
-                    echo "ERROR: Failed to fetch the latest ZyC Clang release! Aborting..."
+                    log_err "Failed to fetch the latest ZyC Clang release! Aborting..."
                     exit 1
                 fi
                 if ! wget -q --show-progress -O "$WP/zyc-clang.tar.gz" "$LATEST_VERSION"; then
-                    echo "ERROR: Download failed! Aborting..."
+                    log_err "Download failed! Aborting..."
                     rm -f "$ZYC_VERSION_FILE"
                     exit 1
                 fi
                 mkdir -p "$toolchain_dir"
                 if ! tar -xf "$WP/zyc-clang.tar.gz" -C "$toolchain_dir"; then
-                    echo "ERROR: Extraction failed! Aborting..."
+                    log_err "Extraction failed! Aborting..."
                     rm -f "$WP/zyc-clang.tar.gz" "$ZYC_VERSION_FILE"
                     exit 1
                 fi
@@ -195,19 +195,19 @@ get_toolchain() {
         rv)
             toolchain_dir="$RV_DIR"
             if [[ ! -d "$toolchain_dir" ]]; then
-            echo -e "\nINFO: RvClang not found! Fetching the latest version..."
+            echo -e "\n$(log_info "RvClang not found! Fetching the latest version...")"
             LATEST_RELEASE=$(curl -s "$RV_REPO" | grep "browser_download_url" | grep ".tar.gz" | cut -d '"' -f 4)
             if [[ -z "$LATEST_RELEASE" ]]; then
-                echo "ERROR: Failed to fetch the latest RvClang release! Aborting..."
+                log_err "Failed to fetch the latest RvClang release! Aborting..."
                 exit 1
             fi
             if ! wget -q --show-progress -O "$WP/rvclang.tar.gz" "$LATEST_RELEASE"; then
-                echo "ERROR: Download failed! Aborting..."
+                log_err "Download failed! Aborting..."
                 exit 1
             fi
             mkdir -p "$toolchain_dir"
             if ! tar -xf "$WP/rvclang.tar.gz" -C "$toolchain_dir"; then
-                echo "ERROR: Extraction failed! Aborting..."
+                log_err "Extraction failed! Aborting..."
                 rm -f "$WP/rvclang.tar.gz"
                 exit 1
             fi
@@ -220,23 +220,23 @@ get_toolchain() {
             fi
             ;;
         *)
-            echo -e "\nERROR: Unknown toolchain type: $toolchain_type"
+            echo -e "\n$(log_err "Unknown toolchain type: $toolchain_type")"
             exit 1
             ;;
     esac
 
     if [[ "$USE_GCC_BINUTILS" == "1" ]]; then
         if [[ ! -d "$GCC_DIR" ]]; then
-            echo "INFO: GCC not found! Cloning to $GCC_DIR..."
+            log_info "GCC not found! Cloning to $GCC_DIR..."
             if ! git clone -q -b lineage-19.1 --depth=1 "$GCC_REPO" "$GCC_DIR"; then
-                echo "ERROR: Cloning failed! Aborting..."
+                log_err "Cloning failed! Aborting..."
                 exit 1
             fi
         fi
         if [[ ! -d "$GCC64_DIR" ]]; then
-            echo "INFO: GCC64 not found! Cloning to $GCC64_DIR..."
+            log_info "GCC64 not found! Cloning to $GCC64_DIR..."
             if ! git clone -q -b lineage-19.1 --depth=1 "$GCC64_REPO" "$GCC64_DIR"; then
-                echo "ERROR: Cloning failed! Aborting..."
+                log_err "Cloning failed! Aborting..."
                 exit 1
             fi
         fi
@@ -250,42 +250,42 @@ prep_toolchain() {
     case "$toolchain_type" in
         aosp)
             toolchain_dir="$AC_DIR"
-            echo "INFO: Toolchain: AOSP Clang"
+            log_info "Toolchain: AOSP Clang"
             ;;
         sdclang)
             toolchain_dir="$SD_DIR/compiler"
-            echo "INFO: Toolchain: Snapdragon Clang"
+            log_info "Toolchain: Snapdragon Clang"
             ;;
         proton)
             toolchain_dir="$PC_DIR"
-            echo "INFO: Toolchain: Proton Clang"
+            log_info "Toolchain: Proton Clang"
             ;;
         rm69)
             toolchain_dir="$RC_DIR"
-            echo "INFO: Toolchain: RastaMod69 Clang"
+            log_info "Toolchain: RastaMod69 Clang"
             ;;
         lolz)
             toolchain_dir="$LZ_DIR"
-            echo "INFO: Toolchain: Lolz Clang"
+            log_info "Toolchain: Lolz Clang"
             ;;
         greenforce)
             toolchain_dir="$GC_DIR"
-            echo "INFO: Toolchain: Greenforce Clang"
+            log_info "Toolchain: Greenforce Clang"
             ;;
         zyc)
             toolchain_dir="$ZC_DIR"
-            echo "INFO: Toolchain: ZyC Clang"
+            log_info "Toolchain: ZyC Clang"
             ;;
         custom)
             toolchain_dir="$CUST_DIR"
-            echo "INFO: Toolchain: Custom toolchain"
+            log_info "Toolchain: Custom toolchain"
             ;;
         rv)
             toolchain_dir="$RV_DIR"
-            echo "INFO: Toolchain: RvClang"
+            log_info "Toolchain: RvClang"
             ;;
         *)
-            echo -e "\nERROR: Unknown toolchain type: $toolchain_type"
+            echo -e "\n$(log_err "Unknown toolchain type: $toolchain_type")"
             exit 1
             ;;
     esac

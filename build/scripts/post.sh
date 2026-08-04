@@ -7,29 +7,29 @@ post_build() {
     ## Check if the kernel binaries were built.
     if [[ "$CODENAME" == "unified" ]]; then
         if [[ -f "$OUT_IMAGE" ]] && [[ -f "$DTBO_TMP/dtbo-ginkgo.img" ]] && [[ -f "$DTBO_TMP/dtbo-laurel_sprout.img" ]] && [[ -f "$OUT_DTB_GINKGO" ]] && [[ -f "$OUT_DTB_LAUREL" ]]; then
-            echo -e "\nINFO: Kernel compiled succesfully! Zipping up..."
+            echo -e "\n$(log_info "Kernel compiled succesfully! Zipping up...")"
         else
-            echo -e "\nERROR: Kernel files not found! Compilation failed?"
-            echo -e "\nINFO: Uploading log to 0x0.st\n"
-            curl -F'file=@log.txt' http://0x0.st || echo "WARNING: Failed to upload log to 0x0.st (ignored)"
+            echo -e "\n$(log_err "Kernel files not found! Compilation failed?")"
+            echo -e "\n$(log_info "Uploading log to 0x0.st")\n"
+            curl -F'file=@log.txt' http://0x0.st || log_warn "Failed to upload log to 0x0.st (ignored)"
             exit 1
         fi
     elif [[ -f "$OUT_IMAGE" ]] && [[ -f "$OUT_DTBO" ]] && [[ -f "$OUT_DTB" ]]; then
-        echo -e "\nINFO: Kernel compiled succesfully! Zipping up..."
+        echo -e "\n$(log_info "Kernel compiled succesfully! Zipping up...")"
     else
-        echo -e "\nERROR: Kernel files not found! Compilation failed?"
-        echo -e "\nINFO: Uploading log to 0x0.st\n"
-        curl -F'file=@log.txt' http://0x0.st || echo "WARNING: Failed to upload log to 0x0.st (ignored)"
+        echo -e "\n$(log_err "Kernel files not found! Compilation failed?")"
+        echo -e "\n$(log_info "Uploading log to 0x0.st")\n"
+        curl -F'file=@log.txt' http://0x0.st || log_warn "Failed to upload log to 0x0.st (ignored)"
         exit 1
     fi
 
     # If local AK3 copy exists, assume testing.
     if [[ -d "$AK3_DIR" ]]; then
         AK3_TEST=1
-        echo -e "\nINFO: AK3_TEST flag set because local AnyKernel3 dir was found"
+        echo -e "\n$(log_info "AK3_TEST flag set because local AnyKernel3 dir was found")"
     else
         if ! git clone -q --depth=1 -b "$AK3_BRANCH" "$AK3_URL" "$AK3_DIR"; then
-            echo -e "\nERROR: Failed to clone AnyKernel3!"
+            echo -e "\n$(log_err "Failed to clone AnyKernel3!")"
             exit 1
         fi
     fi
@@ -54,11 +54,11 @@ post_build() {
     zip -r9 "$ZIP_PATH" * -x '*.git*' README.md *placeholder
     cd ..
     rm -rf "$AK3_DIR"
-    echo -e "\nINFO: Completed in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s) !"
+    echo -e "\n$(log_info "Completed in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s) !")"
     echo "Zip: $ZIP_PATH"
     echo " "
     if [[ "$AK3_TEST" == "1" ]]; then
-        echo -e "\nINFO: Skipping deletion of AnyKernel3 dir because test flag is set"
+        echo -e "\n$(log_info "Skipping deletion of AnyKernel3 dir because test flag is set")"
     else
         rm -rf "$AK3_DIR"
     fi
@@ -66,7 +66,7 @@ post_build() {
 }
 
 clean_tmp() {
-    echo -e "INFO: Cleaning after build..."
+    echo -e "$(log_info "Cleaning after build...")"
     rm -f "$OUT_IMAGE"
     rm -f "$OUT_DTBO"
     rm -rf "$DTBO_TMP"

@@ -4,7 +4,7 @@
 # Sourced by build/ckbuild.sh.
 
 dtbo_build() {
-    echo -e "\nINFO: Running dtbo build..."
+    echo -e "\n$(log_info "Running dtbo build...")"
     mkdir -p "$DTBO_TMP"
     local IN_DTBO=""
     case "$CODENAME" in
@@ -22,7 +22,7 @@ dtbo_build() {
             OUT_DTBO="$DTBO_TMP/dtbo-ginkgo.img"
             ;;
         *)
-            echo "ERROR: Unknown device for DTBO build!"
+            log_err "Unknown device for DTBO build!"
             exit 1
             ;;
     esac
