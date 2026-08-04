@@ -41,5 +41,5 @@ upload() {
         curl -F'file=@log.txt' http://0x0.st || log_warn "Failed to upload log to 0x0.st (ignored)"
     fi
     # Delete any leftover zip files
-    # rm -f "$WP/FloppyKernel*zip"
+    # rm -f "$KDIR/build/FloppyKernel*zip"
 }
