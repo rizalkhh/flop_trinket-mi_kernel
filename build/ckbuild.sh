@@ -51,12 +51,7 @@ case "$TARGET_DEVICE" in
 esac
 
 # Workspace
-if [[ -d /workspace ]]; then
-    WP="/workspace"
-    IS_GP=1
-else
-    IS_GP=0
-fi
+WP="${WP:-$(realpath "$PWD/../")}"
 
 if [[ -z "$WP" ]]; then
     echo -e "\n$(log_err "Please set the WP env var.")\n"
@@ -66,11 +61,6 @@ fi
 if [[ ! -d drivers ]]; then
     echo -e "\n$(log_err "Please execute from top-level kernel tree")\n"
     exit 1
-fi
-
-if [[ "$IS_GP" == "1" ]]; then
-    export KBUILD_BUILD_USER="Flopster101"
-    export KBUILD_BUILD_HOST="buildbot"
 fi
 
 # Other
@@ -255,12 +245,6 @@ prep_build() {
     ## Prepare ccache
     if [[ "$USE_CCACHE" == "1" ]]; then
         log_info "Using ccache"
-        if [[ "$IS_GP" == "1" ]]; then
-            export CCACHE_DIR="$WP/.ccache"
-            ccache -M 10G
-        else
-            log_warn "Environment is not Gitpod, please make sure you setup your own ccache configuration!"
-        fi
     fi
 
     # Show compiler info
