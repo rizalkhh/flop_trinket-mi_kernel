@@ -106,7 +106,7 @@
     <string name="profile_selinux_context">SELinux</string>
     <string name="profile_umount_modules">解除安裝模組</string>
     <string name="failed_to_update_app_profile">為 %s 更新 App Profile 失敗</string>
-    <string name="debug_version_notice">"你正在使用管理器嘅 DEBUG 構建，如果你唔知道乜嘢係 DEBUG 構建，請立即切換至 RELEASE 構建"</string>
+    <string name="debug_version_notice">你正在使用管理器嘅 DEBUG 構建，如果你唔知道乜嘢係 DEBUG 構建，請立即切換至 RELEASE 構建</string>
     <string name="unofficial_version_notice">"您使用嘅管理器並非 %s 官方管理器，您可能無法獲得權限。"</string>
     <string name="settings_umount_modules_default">預設卸載模組</string>
     <string name="settings_umount_modules_default_summary">App Profile 中\"卸載模組\"嘅全局預設值，如果啟用，將會為冇設定 Profile 嘅應用程式移除所有模組針對系統嘅修改。</string>
@@ -148,6 +148,10 @@
     <string name="module_changelog_failed">獲取更新日誌失敗：%s</string>
     <string name="settings_check_update">更新提醒</string>
     <string name="settings_check_update_summary">自動檢查模組和管理器更新</string>
+    <string name="settings_check_manager_update">檢查管理器更新</string>
+    <string name="settings_check_manager_update_summary">自動檢查管理器更新</string>
+    <string name="settings_check_module_update">檢查模組更新</string>
+    <string name="settings_check_module_update_summary">自動檢查已安裝模組的更新</string>
     <string name="grant_root_failed">獲取 root 失敗！</string>
     <string name="action">執行</string>
     <string name="close">關閉</string>
@@ -206,7 +210,7 @@
     <string name="simple_mode">簡潔模式</string>
     <string name="simple_mode_summary">開啟後將隱藏唔必要嘅卡片</string>
     <string name="hide_other_info">強迫症開關</string>
-    <string name="hide_other_info_summary">隱藏導航列上嘅超級用戶數、模組數和 KPM 模組數紅點</string>
+    <string name="hide_other_info_summary">隱藏導航列上嘅超級用戶數、模組數紅點</string>
     <string name="hide_susfs_status">隱藏 SuSFS 狀態資訊</string>
     <string name="hide_susfs_status_summary">隱藏主頁上嘅 SuSFS 狀態資訊</string>
     <string name="hide_zygisk_implement">隱藏 Zygisk 狀態資訊</string>
@@ -402,7 +406,7 @@
     <string name="module_shortcut_name_label">捷徑名稱</string>
     <string name="module_shortcut_icon_pick">選擇自訂圖標</string>
     <string name="module_shortcut_not_supported">啟動器唔支援桌面捷徑。</string>
-    <string name="module_shortcut_should_not_empty">"桌面捷徑名稱唔可以為空"</string>
+    <string name="module_shortcut_should_not_empty">桌面捷徑名稱唔可以為空</string>
     <string name="module_shortcut_created">已喺桌面建立捷徑。</string>
     <string name="module_shortcut_updated">捷徑已更新。</string>
     <string name="module_shortcut_delete">刪除捷徑</string>
