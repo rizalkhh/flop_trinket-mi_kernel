@@ -1,5 +1,3 @@
-#include "kernel_includes.h"
-
 #ifdef MODULE
 #ifndef CONFIG_ARM64
 #error "LKM is only supported on ARM64!"
@@ -8,12 +6,7 @@
 // for OOT builds like on ddk, just enable everything
 #ifndef CONFIG_KSU_HEURISTIC_IN_TREE_BUILD
 	#define CONFIG_KSU_LSM_SECURITY_HOOKS 1
-	#define CONFIG_KSU_KPROBES_KSUD 1
-	#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
-		#define CONFIG_KSU_HACK_ARM64_BRANCH_LINK 1
-	#else
-		#define CONFIG_KSU_TAMPER_SYSCALL_TABLE 1
-	#endif
+	#define CONFIG_KSU_HACK_ARM64_BRANCH_LINK 1
 	#define CONFIG_KSU_FEATURE_SULOG 1
 	#define CONFIG_KSU_FEATURE_ADBROOT 1
 	#define CONFIG_KSU_THRONE_TRACKER_ALWAYS_THREADED 1
@@ -24,6 +17,8 @@
 #error "LKM requires KALLSYMS_ALL!"
 #endif
 #endif // MODULE
+
+#include "kernel_includes.h"
 
 // uapi
 #include "include/uapi/app_profile.h"
@@ -73,20 +68,24 @@
 #include "selinux/selinux.h"
 #include "selinux/sepolicy.h"
 
-#ifdef CONFIG_KALLSYMS
-#include "kallsyms_common.h"
+#ifdef CONFIG_KPROBES
+#include "downstream/kprobes_common.h"
 #endif
 
-#ifdef CONFIG_KPROBES
-#include "kprobes_common.h"
+#ifdef CONFIG_KALLSYMS
+#include "external/chibihash64.h"
+#include "downstream/kallsyms_common.h"
 #endif
 
 #ifdef CONFIG_ARM64
-#include "arm64_bl_insn.h"
+#include "downstream/arm64_branch_insn.h"
 #endif
 
+#include "downstream/slow_avc_audit_defs.h"
+#include "downstream/tiny_sulog.h"
+#include "downstream/vmap_patch.h"
+
 // unity build
-#include "tiny_sulog.c"
 #include "policy/allowlist.c"
 #include "policy/app_profile.c"
 #include "policy/feature.c"
@@ -139,10 +138,13 @@
 #endif /* CONFIG_KSU_TAMPER_SYSCALL_TABLE */
 
 #ifdef CONFIG_KSU_HACK_ARM64_BRANCH_LINK
+#undef syscall_table_sucompat_enable
+#undef syscall_table_sucompat_disable
+#include "hook/syscall_table_hook_arm64.c" // included as fallback
 #include "hook/branch_link_hook_arm64.c"
 #endif
 
-#if defined(CONFIG_KSU_KPROBES_KSUD) && !defined(CONFIG_KSU_TAMPER_SYSCALL_TABLE)
+#if defined(CONFIG_KSU_KPROBES_KSUD) && !defined(CONFIG_KSU_TAMPER_SYSCALL_TABLE) && !defined(CONFIG_KSU_HACK_ARM64_BRANCH_LINK)
 #include "hook/kp_ksud.c"
 #endif
 
@@ -158,7 +160,7 @@ extern void ksu_supercalls_init();
 #else
 	#define FEAT_1 ""
 #endif
-#if defined(CONFIG_KSU_KPROBES_KSUD) && !defined(CONFIG_KSU_TAMPER_SYSCALL_TABLE)
+#if defined(CONFIG_KSU_KPROBES_KSUD) && !defined(CONFIG_KSU_TAMPER_SYSCALL_TABLE) && !defined(CONFIG_KSU_HACK_ARM64_BRANCH_LINK)
 	#define FEAT_2 " +kp_ksud"
 #else
 	#define FEAT_2 ""
@@ -224,6 +226,8 @@ static int __init kernelsu_init(void)
 
 	ksu_kernel_umount_init(); // so the feature is registered
 
+	ksu_selinux_hide_init(); // so the feature is registered
+
 #ifdef CONFIG_KSU_FEATURE_SULOG	
 	ksu_sulog_init(); // so the feature is registered
 #endif
@@ -232,11 +236,9 @@ static int __init kernelsu_init(void)
 	ksu_adb_root_init(); // so the feature is registered
 #endif
 
-	ksu_selinux_hide_init(); // so the feature is registered
-
 	ksu_core_init();
 
-#if defined(CONFIG_KSU_KPROBES_KSUD) && !defined(CONFIG_KSU_TAMPER_SYSCALL_TABLE)
+#if defined(CONFIG_KSU_KPROBES_KSUD) && !defined(CONFIG_KSU_TAMPER_SYSCALL_TABLE) && !defined(CONFIG_KSU_HACK_ARM64_BRANCH_LINK)
 	kp_ksud_init();
 #endif
 
@@ -259,23 +261,32 @@ static int __init kernelsu_init(void)
 	return 0;
 }
 
-#if defined(MODULE)
-static void __exit kernelsu_exit(void)
+#if !defined(MODULE)
+device_initcall(kernelsu_init);
+#else
+#include "downstream/module_blacklist.h"
+static int __init kernelsu_lkm_init(void)
+{
+	ksu_extend_module_blacklist();
+	kobject_del(&THIS_MODULE->mkobj.kobj); 	// tiann/KernelSU fefb02e
+	return kernelsu_init();
+}
+
+static void __exit kernelsu_lkm_exit(void)
 {
 	__builtin_trap();
 	__builtin_unreachable();
 }
-module_init(kernelsu_init);
-module_exit(kernelsu_exit);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
 MODULE_IMPORT_NS("VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)
 MODULE_IMPORT_NS(VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver);
 #endif
-#else
-device_initcall(kernelsu_init);
-#endif
+
+module_init(kernelsu_lkm_init);
+module_exit(kernelsu_lkm_exit);
+#endif // MODULE
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("weishu");
