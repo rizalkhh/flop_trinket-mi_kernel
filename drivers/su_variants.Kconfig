@@ -58,51 +58,15 @@ config KSU_SYSCALL_HOOK
 
 endchoice
 
-# SukiSU Ultra specific options
-config KSU_MULTI_MANAGER_SUPPORT
-	bool "Multi KernelSU manager support"
-	depends on KSU_SUKI
-	default n
-	help
-		Enable multi KernelSU manager support
-
-config KPM
-	bool "Enable SukiSU KPM"
-	depends on KSU_SUKI && 64BIT
-	select KALLSYMS
-	select KALLSYMS_ALL
-	default n
-	help
-	  Enabling this option will activate the KPM feature of SukiSU.
-	  This option is suitable for scenarios where you need to force KPM to be enabled,
-	  but it may affect system stability.
-
-# KernelSU Next specific options
-config KSU_LSM_SECURITY_HOOKS
-	bool "Use LSM security hooks"
-	depends on KSU_NEXT
-	default y
-	help
-	  Disabling this is mostly only useful for kernel 4.1 and older.
-	  Make sure to implement manual hooks on security/security.c.
-
-# Common options
-config KSU_DEBUG
-	bool "KernelSU debug mode"
-	depends on KSU
-	default n
-	help
-	  Enable KernelSU debug mode.
-
-config KSU_ALLOWLIST_WORKAROUND
-	bool "Session Keyring Init workaround"
-	depends on KSU
-	default n
-	help
-	  Enable session keyring init workaround for problematic devices.
-	  Useful for situations where the SU allowlist is not kept after a reboot.
-
 # Load variant-specific configs
+if KSU_NEXT
 source "drivers/kernelsu/kernel/Kconfig"
+endif
+
+if KSU_SUKI
 source "drivers/sukisu/kernel/Kconfig"
+endif
+
+if KSU_XXKSU
 source "drivers/xxksu/kernel/Kconfig"
+endif
