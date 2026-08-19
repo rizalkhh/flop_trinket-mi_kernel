@@ -3678,18 +3678,34 @@ static struct cpumask kswapd_cpumask;
 
 static void init_kswapd_cpumask(void)
 {
-	if (CONFIG_KSWAPD_CPU == 0xFF) { // Check if CONFIG_KSWAPD_CPU is 0xFF
-		cpumask_setall(&kswapd_cpumask); // Set all CPUs in the mask
-	} else {
-		int i;
-		cpumask_clear(&kswapd_cpumask);
+	int i;
 
-		for (i = 0; i < nr_cpu_ids; i++) {
-			if (CONFIG_KSWAPD_CPU & (1 << i)) {
-				cpumask_set_cpu(i, &kswapd_cpumask);
+	cpumask_clear(&kswapd_cpumask);
+	for (i = 0; i < nr_cpu_ids; i++) {
+		if (CONFIG_KSWAPD_CPU & (1 << i))
+			cpumask_set_cpu(i, &kswapd_cpumask);
+	}
+}
+
+static int set_kswapd_cpu_affinity_as_config(void)
+{
+	int nid, hid;
+
+	for_each_node_state(nid, N_MEMORY) {
+		pg_data_t *pgdat = NODE_DATA(nid);
+		const struct cpumask *mask;
+
+		mask = &kswapd_cpumask;
+
+		if (cpumask_any_and(cpu_online_mask, mask) < nr_cpu_ids) {
+			/* One of our CPUs online: restore mask */
+			for (hid = 0; hid < MAX_KSWAPD_THREADS; hid++) {
+				if (pgdat->mkswapd[hid])
+					set_cpus_allowed_ptr(pgdat->mkswapd[hid], mask);
 			}
 		}
 	}
+	return 0;
 }
 #endif
 
@@ -4033,8 +4049,44 @@ static ssize_t kswapd_threads_store(struct kobject *kobj,
 static struct kobj_attribute kswapd_threads_attr =
 	__ATTR(kswapd_threads, 0644, kswapd_threads_show, kswapd_threads_store);
 
+#ifdef CONFIG_KSWAPD_CPU
+static ssize_t kswapd_cpu_show(struct kobject *kobj,
+			       struct kobj_attribute *attr, char *buf)
+{
+	return sprintf(buf, "0x%lx\n", *cpumask_bits(&kswapd_cpumask));
+}
+
+static ssize_t kswapd_cpu_store(struct kobject *kobj,
+				struct kobj_attribute *attr,
+				const char *buf, size_t count)
+{
+	unsigned long mask_val;
+	int err, i;
+
+	err = kstrtoul(buf, 0, &mask_val);
+	if (err || !mask_val)
+		return -EINVAL;
+
+	cpumask_clear(&kswapd_cpumask);
+	for (i = 0; i < nr_cpu_ids; i++) {
+		if (mask_val & (1UL << i))
+			cpumask_set_cpu(i, &kswapd_cpumask);
+	}
+
+	set_kswapd_cpu_affinity_as_config();
+
+	return count;
+}
+
+static struct kobj_attribute kswapd_cpu_attr =
+	__ATTR(kswapd_cpu, 0644, kswapd_cpu_show, kswapd_cpu_store);
+#endif
+
 static struct attribute *vmscan_attrs[] = {
 	&kswapd_threads_attr.attr,
+#ifdef CONFIG_KSWAPD_CPU
+	&kswapd_cpu_attr.attr,
+#endif
 	NULL,
 };
 
