@@ -9,6 +9,8 @@
 # You may select, at your option, one of the above-listed licenses.
 # ################################################################
 
+ccflags-y += -O3 -funroll-loops
+
 obj-y :=	common/debug.o \
 			common/entropy_common.o \
 			common/error_private.o \
