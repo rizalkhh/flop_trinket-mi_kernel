@@ -27,7 +27,7 @@ jobs:
         with:
           path: |
             ~/.ccache
-            ../toolchains
+            toolchains
           key: ${{ runner.os }}-kernel-build-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-kernel-build-
@@ -46,8 +46,8 @@ jobs:
         run: |
           # Set toolchain type to aosp (the script will download it automatically)
           export CLANG_TYPE=aosp
-          # Set WP (workspace path) to the parent directory
-          export WP=$(realpath ..)
+          # Set WP (workspace path) to the current directory (inside workspace for caching)
+          export WP=$(pwd)
           
           # Configure ccache parameters for optimal size (10GB)
           ccache -M 10G
