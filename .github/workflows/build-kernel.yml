@@ -22,12 +22,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev python3 wget
 
+      - name: Setup Cache (ccache & toolchains)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.ccache
+            ../toolchains
+          key: ${{ runner.os }}-kernel-build-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-kernel-build-
+
       - name: Compile Kernel
         run: |
           # Set toolchain type to aosp (the script will download it automatically)
           export CLANG_TYPE=aosp
           # Set WP (workspace path) to the parent directory
           export WP=$(realpath ..)
+          
+          # Configure ccache parameters for optimal size (10GB)
+          ccache -M 10G
+          
           # Run the build script for unified mitrinket target with the 'x' (XXKSU-SUSFS) option
           ./do_build.sh mitrinket x
 
