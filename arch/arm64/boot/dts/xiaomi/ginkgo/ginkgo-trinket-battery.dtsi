@@ -18,7 +18,7 @@
 	/delete-property/ qcom,connector-internal-pull-kohm;
 
 	qcom,fcc-max-ua = <3000000>;
-	qcom,fv-max-uv = <4400000>;
+	qcom,fv-max-uv = <4450000>;
 	qcom,dc-icl-ua = <3000000>;
 	qcom,usb-icl-ua = <3000000>;
 	qcom,chg-term-src = <1>;

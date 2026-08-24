@@ -1842,7 +1842,7 @@ static int smb5_batt_get_prop(struct power_supply *psy,
     if (IS_ENABLED(CONFIG_MACH_XIAOMI_F9S) && mi_is_laurel())
       val->intval = 4030000;
     else if (IS_ENABLED(CONFIG_MACH_XIAOMI_C3J) && mi_is_ginkgo())
-      val->intval = 4000000;
+      val->intval = 5000000;
     else
       rc = smblib_get_prop_from_bms(chg,
                  POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN,
