@@ -26,7 +26,7 @@ qcom,unknow_4000mah {
 				451  600   4100000>;
 	qcom,step-chg-ranges = <3600000  3800000  3450000
 				3801000  4300000  2760000
-				4301000  4350000  2070000>;
+				4301000  4450000  2070000>;
 	qcom,ocv-based-step-chg;
 
 	/* COOL = 5 DegC, WARM = 45 DegC */
@@ -37,7 +37,7 @@ qcom,unknow_4000mah {
 	/* COOL hys = 8 DegC, WARM hys = 37 DegC */
 	qcom,jeita-soft-hys-thresholds = <0x4126 0x223e>;
 	qcom,jeita-soft-fcc-ua = <1725000 2760000>;
-	qcom,jeita-soft-fv-uv = <4250000 4250000>;
+	qcom,jeita-soft-fv-uv = <4450000 4100000>;
 
 	qcom,fcc1-temp-lut {
 		qcom,lut-col-legend = <0 10 25 40 50>;

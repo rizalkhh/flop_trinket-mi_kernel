@@ -27,7 +27,7 @@ qcom,atl_4000mah {
 				451  600   4100000>;
 	qcom,step-chg-ranges = <3600000  3800000  3450000
 				3801000  4300000  2760000
-				4301000  4350000  2070000>;
+				4301000  4450000  2070000>;
 
 	/* COOL = 5 DegC, WARM = 45 DegC */
 	qcom,jeita-soft-thresholds = <0x5316 0x20B9>;
