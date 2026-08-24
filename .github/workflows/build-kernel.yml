@@ -1,0 +1,38 @@
+name: Build XXKSU-SUSFS Kernel
+
+on:
+  workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
+  push:
+    branches:
+      - floppy-unity # Triggers automatically when you push to the floppy-unity branch
+
+jobs:
+  build:
+    name: Build Kernel (XXKSU-SUSFS)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 1
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev python3 wget
+
+      - name: Compile Kernel
+        run: |
+          # Set toolchain type to aosp (the script will download it automatically)
+          export CLANG_TYPE=aosp
+          # Set WP (workspace path) to the parent directory
+          export WP=$(realpath ..)
+          # Run the build script for unified mitrinket target with the 'x' (XXKSU-SUSFS) option
+          ./do_build.sh mitrinket x
+
+      - name: Upload Kernel Flashable Zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: FloppyKernel-XXKSU-SUSFS-mitrinket
+          path: build/Floppy_*.zip
