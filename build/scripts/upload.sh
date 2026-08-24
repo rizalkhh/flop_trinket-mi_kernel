@@ -18,8 +18,15 @@ CAPTION_BUILD="Build info:
 # Functions to send file(s) via Telegram's BOT api.
 tgs() {
     MD5=$(md5sum "$1" | cut -d' ' -f1)
+    local real_chat_id="$TELEGRAM_CHAT_ID"
+    local extra_args=()
+    if [[ "$TELEGRAM_CHAT_ID" == *:* ]]; then
+        real_chat_id="${TELEGRAM_CHAT_ID%%:*}"
+        extra_args+=("-F" "message_thread_id=${TELEGRAM_CHAT_ID##*:}")
+    fi
     curl -fsSL -X POST -F document=@"$1" https://api.telegram.org/bot"${TELEGRAM_BOT_TOKEN}"/sendDocument \
-        -F "chat_id=${TELEGRAM_CHAT_ID}" \
+        -F "chat_id=${real_chat_id}" \
+        "${extra_args[@]}" \
         -F "parse_mode=Markdown" \
         -F "disable_web_page_preview=true" \
         -F "caption=${CAPTION_BUILD}*MD5*: \`$MD5\`" &>/dev/null
@@ -32,9 +39,13 @@ upload() {
     fi
 
     if [[ "$DO_TG" == "1" ]]; then
+        if [[ -n "$TELEGRAM_BOT_TOKEN" ]] && [[ -n "$TELEGRAM_CHAT_ID" ]]; then
             log_info "Uploading build to Telegram"
             tgs "$ZIP_PATH"
             log_info "Done!"
+        else
+            log_warn "Telegram credentials missing, skipping Telegram upload."
+        fi
     fi
     if [[ "$LOG_UPLOAD" == "1" ]]; then
         echo -e "\n$(log_info "Uploading log to 0x0.st")\n"

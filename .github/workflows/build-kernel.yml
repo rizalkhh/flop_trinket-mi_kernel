@@ -32,6 +32,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-kernel-build-
 
+      - name: Configure Telegram Secrets
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -n "$TG_BOT_TOKEN" ] && [ -n "$TG_CHAT_ID" ]; then
+            echo "$TG_BOT_TOKEN" > ../bot_token
+            echo "$TG_CHAT_ID" > ../chat_test
+          fi
+
       - name: Compile Kernel
         run: |
           # Set toolchain type to aosp (the script will download it automatically)
@@ -43,7 +53,12 @@ jobs:
           ccache -M 10G
           
           # Run the build script for unified mitrinket target with the 'x' (XXKSU-SUSFS) option
-          ./do_build.sh mitrinket x
+          # Also add 't' flag for Telegram upload if credentials are provided
+          if [ -f ../bot_token ]; then
+            ./do_build.sh mitrinket xt
+          else
+            ./do_build.sh mitrinket x
+          fi
 
       - name: Unpack Flashable Zip
         run: |
