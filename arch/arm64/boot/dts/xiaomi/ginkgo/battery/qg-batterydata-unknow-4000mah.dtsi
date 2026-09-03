@@ -13,7 +13,7 @@ qcom,unknow_4000mah {
 	qcom,battery-beta = <4250>;
 	qcom,battery-therm-kohm = <100>;
 	qcom,battery-type =
-		"unknow-default";
+		"unknown-default";
 	qcom,qg-batt-profile-ver = <100>;
 
 	qcom,jeita-fcc-ranges = <0   50   400000
